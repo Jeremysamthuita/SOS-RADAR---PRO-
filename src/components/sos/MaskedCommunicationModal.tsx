@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { RescueProvider } from '@/types/sos';
 import {
   Dialog,
   DialogContent,
@@ -8,22 +9,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ChatMessage, RescueProvider } from '@/types/sos';
-import { storageService } from '@/services/storage';
 import {
   PhoneCall,
   PhoneOff,
-  Mic,
-  MicOff,
-  Volume2,
-  VolumeX,
+  MessageSquare,
   Send,
   ShieldCheck,
-  AlertTriangle,
-  User,
+  Lock,
+  Volume2,
+  Mic,
+  MicOff,
+  AlertCircle,
   Truck,
-  MessageSquare,
-  Sparkles,
+  CheckCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -34,14 +32,12 @@ interface MaskedCommunicationModalProps {
   provider: RescueProvider;
 }
 
-const QUICK_CHIPS = [
-  'I am safely on right shoulder',
-  'Hazard flashers are active',
-  'Heavy passing traffic at 75mph',
-  'Need flatbed for AWD drivetrain',
-  'Key locked inside vehicle',
-  'All passengers are uninjured',
-];
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'provider';
+  text: string;
+  time: string;
+}
 
 export const MaskedCommunicationModal: React.FC<MaskedCommunicationModalProps> = ({
   open,
@@ -49,321 +45,203 @@ export const MaskedCommunicationModal: React.FC<MaskedCommunicationModalProps> =
   initialTab = 'chat',
   provider,
 }) => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'call'>(initialTab);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [tab, setTab] = useState<'chat' | 'call'>(initialTab);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'm1',
+      sender: 'provider',
+      text: `Habari! I am ${provider.driverName} with ${provider.companyName}. Moving with unit ${provider.licensePlate}. Are you parked off the tarmac with warning triangles deployed?`,
+      time: 'Just now',
+    },
+  ]);
   const [inputText, setInputText] = useState('');
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Call simulation state
-  const [callState, setCallState] = useState<'ringing' | 'connected' | 'ended'>('ringing');
-  const [callSeconds, setCallSeconds] = useState(0);
+  const [isCalling, setIsCalling] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
-  const [isSpeaker, setIsSpeaker] = useState(true);
 
-  // Load chat messages
-  useEffect(() => {
-    if (open) {
-      setMessages(storageService.getChatMessages());
-      setActiveTab(initialTab);
-      if (initialTab === 'call') {
-        startCallSimulation();
-      }
-    }
-  }, [open, initialTab]);
+  const quickReplies = [
+    'Yes, warning triangles 50m behind',
+    'Parked on the grass verge',
+    'Hazard lights are blinking',
+    'Front right tire is completely flat',
+    'I have children in the vehicle',
+  ];
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, activeTab]);
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
 
-  // Voice call timer
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (activeTab === 'call' && callState === 'connected') {
-      interval = setInterval(() => {
-        setCallSeconds((s) => s + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [activeTab, callState]);
+    const userMsg: ChatMessage = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      text: inputText.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
 
-  const startCallSimulation = () => {
-    setCallState('ringing');
-    setCallSeconds(0);
-    storageService.playEmergencyAudioTone(440, 0.4, 'sine');
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText('');
 
     setTimeout(() => {
-      setCallState('connected');
-      storageService.playEmergencyAudioTone(620, 0.2, 'sine');
-      toast.info(`Connected with ${provider.driverName} via encrypted relay.`);
-    }, 2800);
+      const replyMsg: ChatMessage = {
+        id: `p-${Date.now()}`,
+        sender: 'provider',
+        text: 'Received loud and clear. Approaching your GPS coordinates now. Please remain inside with seatbelts fastened.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, replyMsg]);
+    }, 1500);
   };
 
-  const handleEndCall = () => {
-    setCallState('ended');
-    storageService.playEmergencyAudioTone(300, 0.3, 'sine');
-    setTimeout(() => {
-      setActiveTab('chat');
-    }, 900);
+  const handleSendQuickReply = (text: string) => {
+    const userMsg: ChatMessage = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMessages((prev) => [...prev, userMsg]);
+    toast.info('Quick status sent to responder');
   };
 
-  const handleSendMessage = (textToSend?: string, isQuickChip = false) => {
-    const text = (textToSend || inputText).trim();
-    if (!text) return;
-
-    const newMsg = storageService.addChatMessage('driver', 'Driver (You)', text, isQuickChip);
-    setMessages((prev) => [...prev, newMsg]);
-    if (!textToSend) setInputText('');
-
-    // Trigger simulated responder reply after 2.5s
-    setTimeout(() => {
-      const replies = [
-        `Copy that. GPS location is locked on my cab terminal. ETA is about ${provider.currentEtaMinutes} minutes. Stay inside your vehicle!`,
-        `Understood. I have the winch & towing equipment staged. Approaching corridor now.`,
-        `Got it. Dispatch center alerted highway patrol as well. See you shortly.`,
-      ];
-      const randomReply = replies[Math.floor(Math.random() * replies.length)];
-      const responderMsg = storageService.addChatMessage('rescuer', provider.driverName, randomReply);
-      setMessages((prev) => [...prev, responderMsg]);
-      storageService.playEmergencyAudioTone(750, 0.15, 'sine');
-    }, 2200);
+  const startMaskedCall = () => {
+    setIsCalling(true);
+    toast.success(`Encrypted voice link established with ${provider.driverName}`);
   };
 
-  const formatCallTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainder = secs % 60;
-    return `${mins.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
+  const endMaskedCall = () => {
+    setIsCalling(false);
+    setCallDuration(0);
+    toast.info('Encrypted call terminated.');
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-lg border-4 border-black p-0 rounded-none bg-white shadow-hard text-black font-sans">
-        {/* Header with Masked Line Indicator */}
-        <DialogHeader className="bg-black text-white p-3 border-b-2 border-black flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+      <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-lg p-0 rounded-3xl glass-panel border border-white/10 text-white overflow-hidden shadow-2xl">
+        <DialogHeader className="p-4 border-b border-white/5 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+              <Truck className="w-4 h-4" />
+            </div>
             <div>
-              <DialogTitle className="font-mono text-sm font-black tracking-wider uppercase text-white">
-                IN-APP ENCRYPTED RELAY
+              <DialogTitle className="text-sm font-bold text-white flex items-center gap-2">
+                <span>{provider.companyName}</span>
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/30">
+                  Relay Masked
+                </span>
               </DialogTitle>
-              <div className="text-[10px] text-neutral-300 font-mono">
-                Line: {provider.phoneMasked}
+              <div className="text-[11px] text-slate-400">
+                Unit {provider.licensePlate} • {provider.driverName}
               </div>
             </div>
           </div>
 
-          {/* Mode Switch Tabs */}
-          <div className="flex items-center gap-1 font-mono text-xs">
-            <Button
-              size="sm"
-              variant={activeTab === 'chat' ? 'default' : 'outline'}
-              onClick={() => setActiveTab('chat')}
-              className={`h-7 px-2.5 rounded-none border border-white text-xs font-bold uppercase ${
-                activeTab === 'chat' ? 'bg-white text-black' : 'bg-black text-white'
+          <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-white/5 text-xs">
+            <button
+              type="button"
+              onClick={() => setTab('chat')}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                tab === 'chat' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <MessageSquare className="w-3 h-3 mr-1" />
               Chat
-            </Button>
-            <Button
-              size="sm"
-              variant={activeTab === 'call' ? 'default' : 'outline'}
-              onClick={() => {
-                setActiveTab('call');
-                if (callState !== 'connected') startCallSimulation();
-              }}
-              className={`h-7 px-2.5 rounded-none border border-white text-xs font-bold uppercase ${
-                activeTab === 'call' ? 'bg-emerald-500 text-white' : 'bg-black text-white'
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('call')}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                tab === 'call' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <PhoneCall className="w-3 h-3 mr-1" />
-              Call
-            </Button>
+              Voice Call
+            </button>
           </div>
         </DialogHeader>
 
-        {/* TAB 1: MASKED CHAT */}
-        {activeTab === 'chat' && (
-          <div className="flex flex-col h-[65vh] font-mono">
-            {/* Rapid Stress Quick-Chips */}
-            <div className="p-2 bg-neutral-100 border-b border-black overflow-x-auto whitespace-nowrap flex gap-1.5 scrollbar-thin">
-              <span className="text-[10px] font-bold uppercase text-neutral-600 flex items-center gap-1 py-1 px-1">
-                <Sparkles className="w-3 h-3 text-red-600" /> Crisis Chips:
-              </span>
-              {QUICK_CHIPS.map((chip, idx) => (
+        {tab === 'chat' ? (
+          <div className="flex flex-col h-[400px]">
+            {/* Quick Chips */}
+            <div className="p-2.5 bg-slate-900/60 border-b border-white/5 flex gap-1.5 overflow-x-auto whitespace-nowrap">
+              {quickReplies.map((qr) => (
                 <button
-                  key={idx}
+                  key={qr}
                   type="button"
-                  onClick={() => handleSendMessage(chip, true)}
-                  className="rounded-none border border-black bg-white hover:bg-neutral-200 text-[11px] px-2 py-1 font-medium text-black transition-colors shrink-0 active:scale-95 shadow-hard-sm"
+                  onClick={() => handleSendQuickReply(qr)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] font-medium border border-white/5 shrink-0"
                 >
-                  + {chip}
+                  {qr}
                 </button>
               ))}
             </div>
 
-            {/* Chat Messages Stream */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-neutral-50">
-              {messages.map((m) => {
-                const isDriver = m.sender === 'driver';
-                const isSystem = m.sender === 'system';
-
-                if (isSystem) {
-                  return (
-                    <div key={m.id} className="text-center my-2">
-                      <div className="inline-block bg-black text-white text-[10px] px-2 py-0.5 border border-white font-mono uppercase">
-                        {m.text}
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
+            {/* Chat Messages */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
+                >
                   <div
-                    key={m.id}
-                    className={`flex flex-col ${isDriver ? 'items-end' : 'items-start'}`}
+                    className={`max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
+                      m.sender === 'user'
+                        ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md'
+                        : 'bg-slate-800 text-slate-200 border border-white/5'
+                    }`}
                   >
-                    <div className="text-[10px] text-neutral-500 mb-0.5 px-1 flex items-center gap-1">
-                      {isDriver ? <User className="w-3 h-3" /> : <Truck className="w-3 h-3" />}
-                      <span>{m.senderName}</span>
-                      <span>•</span>
-                      <span>{m.timestamp}</span>
-                    </div>
-
-                    <div
-                      className={`max-w-[85%] p-2.5 border-2 border-black text-xs leading-relaxed shadow-hard-sm ${
-                        isDriver
-                          ? 'bg-black text-white rounded-none'
-                          : 'bg-white text-black rounded-none'
-                      }`}
-                    >
-                      {m.text}
-                    </div>
+                    {m.text}
                   </div>
-                );
-              })}
-              <div ref={chatEndRef} />
+                  <span className="text-[10px] text-slate-500 mt-1 px-1">{m.time}</span>
+                </div>
+              ))}
             </div>
 
             {/* Input Bar */}
-            <div className="p-2 border-t-2 border-black bg-white flex items-center gap-1.5">
+            <form onSubmit={handleSendMessage} className="p-3 border-t border-white/5 bg-slate-900/80 flex gap-2">
               <Input
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type urgent message to driver..."
-                className="rounded-none border-2 border-black h-10 font-mono text-xs px-3 focus-visible:ring-black"
+                placeholder="Type urgent message to rescuer..."
+                className="rounded-xl border border-white/10 bg-slate-900 text-white text-xs h-10 px-3"
               />
               <Button
-                onClick={() => handleSendMessage()}
-                className="rounded-none bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-xs h-10 px-4 border-2 border-black shadow-hard-sm shrink-0"
+                type="submit"
+                className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs h-10 px-4 font-semibold shadow-md shadow-red-500/20 shrink-0"
               >
-                <Send className="w-4 h-4 mr-1" /> SEND
+                <Send className="w-3.5 h-3.5" />
               </Button>
-            </div>
+            </form>
           </div>
-        )}
+        ) : (
+          <div className="p-8 flex flex-col items-center justify-center text-center space-y-4">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/20">
+              <PhoneCall className="w-8 h-8 animate-pulse" />
+            </div>
 
-        {/* TAB 2: MASKED VOICE CALL */}
-        {activeTab === 'call' && (
-          <div className="p-6 bg-neutral-900 text-white flex flex-col items-center justify-between min-h-[55vh] font-mono select-none">
-            {/* Top Call Info */}
-            <div className="text-center space-y-2 mt-4">
-              <div className="w-20 h-20 mx-auto rounded-none border-4 border-white overflow-hidden shadow-hard bg-neutral-800">
-                <img
-                  src={provider.driverAvatar}
-                  alt={provider.driverName}
-                  className="w-full h-full object-cover"
-                />
+            <div>
+              <div className="text-base font-bold text-white">
+                {isCalling ? `Connected: ${provider.driverName}` : `Call ${provider.driverName}`}
               </div>
-
-              <div className="space-y-0.5">
-                <div className="text-xl font-black uppercase tracking-wide">
-                  {provider.driverName}
-                </div>
-                <div className="text-xs text-neutral-400">
-                  {provider.companyName}
-                </div>
-                <div className="text-[11px] text-emerald-400 font-bold">
-                  {provider.phoneMasked}
-                </div>
-              </div>
-
-              {/* Status & Timer */}
-              <div className="mt-3">
-                {callState === 'ringing' && (
-                  <div className="inline-flex items-center gap-2 bg-neutral-800 text-amber-300 px-3 py-1 border border-neutral-700 text-xs font-bold animate-pulse">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    CONNECTING ENCRYPTED RELAY...
-                  </div>
-                )}
-                {callState === 'connected' && (
-                  <div className="inline-flex items-center gap-2 bg-emerald-950 text-emerald-300 px-3 py-1 border border-emerald-600 text-xs font-bold">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    CALL CONNECTED • {formatCallTime(callSeconds)}
-                  </div>
-                )}
-                {callState === 'ended' && (
-                  <div className="text-xs text-neutral-400 font-bold">
-                    CALL DISCONNECTED
-                  </div>
-                )}
+              <div className="text-xs text-slate-400 mt-1">
+                Encrypted Kenyan Telecom Relay (+254 Proxy Masking)
               </div>
             </div>
 
-            {/* Audio Wave Visualizer Simulation */}
-            {callState === 'connected' && (
-              <div className="my-6 flex items-center justify-center gap-1.5 h-12">
-                {[24, 40, 16, 48, 32, 20, 44, 28, 12, 36, 48, 20].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 bg-emerald-400 transition-all duration-200 animate-pulse"
-                    style={{ height: `${(h * (callSeconds % 3 === 0 ? 1.2 : 0.7))}px` }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* In-Call Controls */}
-            <div className="w-full max-w-xs space-y-4 mb-2">
-              <div className="flex items-center justify-around">
-                <button
-                  type="button"
-                  onClick={() => setIsMuted(!isMuted)}
-                  className={`w-12 h-12 rounded-none border-2 border-white flex items-center justify-center transition-colors ${
-                    isMuted ? 'bg-red-600 text-white' : 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                  }`}
-                >
-                  {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSpeaker(!isSpeaker)}
-                  className={`w-12 h-12 rounded-none border-2 border-white flex items-center justify-center transition-colors ${
-                    isSpeaker ? 'bg-white text-black font-bold' : 'bg-neutral-800 text-white'
-                  }`}
-                >
-                  {isSpeaker ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                </button>
-
-                <a
-                  href="tel:911"
-                  className="w-12 h-12 rounded-none border-2 border-white bg-red-800 hover:bg-red-900 text-white flex flex-col items-center justify-center font-mono text-[9px] font-black leading-tight no-underline"
-                >
-                  <span>911</span>
-                  <span>BRIDGE</span>
-                </a>
-              </div>
-
-              {/* End Call Button */}
+            {isCalling ? (
               <Button
-                onClick={handleEndCall}
-                className="w-full h-12 rounded-none bg-red-600 hover:bg-red-700 text-white font-mono font-black text-sm border-2 border-white shadow-hard flex items-center justify-center gap-2 uppercase tracking-wider"
+                onClick={endMaskedCall}
+                className="w-full h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2"
               >
-                <PhoneOff className="w-5 h-5" />
-                END MASKED CALL
+                <PhoneOff className="w-4 h-4" />
+                End Encrypted Call
               </Button>
-            </div>
+            ) : (
+              <Button
+                onClick={startMaskedCall}
+                className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2"
+              >
+                <PhoneCall className="w-4 h-4" />
+                Initiate Masked Voice Call
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>

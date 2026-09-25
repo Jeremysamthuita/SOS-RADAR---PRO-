@@ -1,67 +1,108 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import IntersectObserver from '@/components/common/IntersectObserver';
-import { Toaster } from '@/components/ui/sonner';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { getRoutes } from './routes';
-import { storageService } from '@/services/storage';
-import { SosIncident } from '@/types/sos';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { LiveBiddingPage } from '@/pages/LiveBiddingPage';
+import { ActiveRescuePage } from '@/pages/ActiveRescuePage';
+import { SettingsPage } from '@/pages/SettingsPage';
+import { LoginPage } from '@/pages/LoginPage';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { RouteGuard } from '@/components/common/RouteGuard';
+import { SosIncident } from '@/types/sos';
+import { storageService } from '@/services/storage';
+import { Toaster } from 'sonner';
 
-const App: React.FC = () => {
-  const [activeIncident, setActiveIncident] = useState<SosIncident | null>(
+export function App() {
+  const [activeIncident, setActiveIncident] = useState<SosIncident | null>(() =>
     storageService.getActiveIncident()
   );
 
   useEffect(() => {
-    // Sync active incident on mount
-    const inc = storageService.getActiveIncident();
-    setActiveIncident(inc);
+    const handleStorageChange = () => {
+      setActiveIncident(storageService.getActiveIncident());
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  const routeList = getRoutes({
-    activeIncident,
-    onIncidentUpdated: setActiveIncident,
-  });
 
   return (
     <AuthProvider>
-      <Router>
-        <IntersectObserver />
-        <div className="flex flex-col min-h-screen bg-neutral-100 text-foreground selection:bg-black selection:text-white">
+      <BrowserRouter>
+        <div className="min-h-screen bg-[#070A10] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
           <Navbar activeIncident={activeIncident} />
-          <main className="flex-grow pb-12">
+
+          <main className="flex-1 w-full pb-16">
             <Routes>
-              {routeList.map((route, index) => (
-                <Route
-                  key={index}
-                  path={route.path}
-                  element={route.element}
-                />
-              ))}
+              {/* Screen 1: "One-Tap Dispatch" Home Screen (Dominant map + 4 Large Diagnostic Tiles) */}
+              <Route
+                path="/"
+                element={
+                  <RouteGuard>
+                    <DashboardPage
+                      activeIncident={activeIncident}
+                      onIncidentUpdated={setActiveIncident}
+                    />
+                  </RouteGuard>
+                }
+              />
+
+              {/* Screen 2: "Live Bidding & Pricing" Comparison Matrix */}
+              <Route
+                path="/bidding"
+                element={
+                  <RouteGuard>
+                    <LiveBiddingPage
+                      onIncidentUpdated={setActiveIncident}
+                    />
+                  </RouteGuard>
+                }
+              />
+
+              {/* Screen 3: "Anxiety-Reduction" Active Tracking Screen */}
+              <Route
+                path="/tracking"
+                element={
+                  <RouteGuard>
+                    <ActiveRescuePage
+                      activeIncident={activeIncident}
+                      onIncidentUpdated={setActiveIncident}
+                    />
+                  </RouteGuard>
+                }
+              />
+
+              {/* Garage & Settings */}
+              <Route
+                path="/settings"
+                element={
+                  <RouteGuard>
+                    <SettingsPage />
+                  </RouteGuard>
+                }
+              />
+
+              <Route path="/login" element={<LoginPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
 
-          {/* Global High-Glanceability Tactical Footer */}
-          <footer className="w-full bg-black text-white border-t-4 border-black py-4 px-4 font-mono text-xs">
-            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-red-600 border border-white animate-pulse" />
-                <span className="font-black uppercase tracking-wider">
-                  SOS RADAR - NASA SENTINEL-1 SAR ROAD RESCUE
-                </span>
+          <footer className="w-full glass-panel border-t border-white/5 py-4 px-4 text-xs text-slate-400">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
+              <div>
+                <span className="font-extrabold text-white">ROADSIDE SOS</span> • High-Stress Highway Emergency Protocol
               </div>
-              <div className="text-neutral-400 text-[11px]">
-                NASA Sentinel-1 SAR Geolocation • 45–60s Cascaded Dispatch • 100% Emergency Motorist Assurance
+              <div className="flex items-center gap-4 text-[11px] text-slate-400">
+                <span>National Hotlines: 999 • 112 • 1199</span>
+                <span>AA Kenya +254 709 933 000</span>
               </div>
             </div>
           </footer>
+
+          <Toaster position="top-right" richColors closeButton theme="dark" />
         </div>
-        <Toaster position="top-right" richColors />
-      </Router>
+      </BrowserRouter>
     </AuthProvider>
   );
-};
+}
 
 export default App;

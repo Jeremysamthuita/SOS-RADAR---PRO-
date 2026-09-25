@@ -105,6 +105,33 @@ export interface RescueProvider {
   status: 'matched' | 'en_route' | 'arriving' | 'on_scene' | 'in_progress' | 'completed';
 }
 
+
+export interface ProviderBid {
+  id: string;
+  providerId: string;
+  companyName: string;
+  driverName: string;
+  driverPhone: string;
+  rating: number;
+  reviewsCount: number;
+  etaMinutes: number;
+  distanceKm: number;
+  vehicleType: string;
+  licensePlate: string;
+  finalFixedPriceKes: number;
+  priceBreakdown: {
+    baseFareKes: number;
+    equipmentKes: number;
+    mileageFeeKes: number;
+    taxesKes: number;
+    totalKes: number;
+  };
+  equipmentMatch: string;
+  equipmentCertified: boolean;
+  isBestValue?: boolean;
+  isFastest?: boolean;
+}
+
 export interface SosIncident {
   id: string;
   createdAt: string;

@@ -330,40 +330,39 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
   };
 
   return (
-    <div className={`relative w-full border-4 border-black bg-neutral-900 shadow-hard overflow-hidden flex flex-col ${className}`}>
+    <div className={`relative w-full rounded-3xl border border-white/10 bg-slate-950 shadow-2xl overflow-hidden flex flex-col ${className}`}>
       {/* Top Map Toolbar: NASA Sentinel-1 SAR & Layer Switcher */}
-      <div className="z-10 bg-black text-white px-3 py-2.5 border-b-2 border-white flex flex-wrap items-center justify-between gap-2 shrink-0 font-mono">
+      <div className="z-10 glass-panel px-4 py-2.5 border-b border-white/5 flex flex-wrap items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <Satellite className="w-4 h-4 text-emerald-400 animate-pulse" />
-          <span className="text-xs font-black tracking-wider uppercase text-white">
-            NASA SENTINEL-1 SAR RADAR
+          <span className="text-xs font-bold tracking-tight text-white">
+            SAR Live Radar
           </span>
-          <Badge className="rounded-none bg-emerald-600 text-white text-[9px] uppercase font-bold px-1.5 py-0">
-            SAR BACKSCATTER
-          </Badge>
+          <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold px-2 py-0.5 rounded-full">
+            All-Weather
+          </span>
         </div>
 
         {/* Satellite Imagery Layer Selector */}
-        <div className="flex items-center gap-1 text-[10px]">
-          <span className="text-neutral-400 mr-1 hidden sm:inline">IMAGERY:</span>
+        <div className="flex items-center gap-1.5 text-xs">
           <Button
             size="sm"
             onClick={() => handleSwitchLayer('sentinel1')}
-            className={`h-6 px-2 text-[10px] rounded-none border font-bold uppercase ${
+            className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
               activeLayer === 'sentinel1'
-                ? 'bg-yellow-400 text-black border-white'
-                : 'bg-black text-white border-neutral-600 hover:bg-neutral-800'
+                ? 'bg-white/10 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Sentinel-1 SAR
+            Sentinel-1
           </Button>
           <Button
             size="sm"
             onClick={() => handleSwitchLayer('viirs')}
-            className={`h-6 px-2 text-[10px] rounded-none border font-bold uppercase ${
+            className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
               activeLayer === 'viirs'
-                ? 'bg-yellow-400 text-black border-white'
-                : 'bg-black text-white border-neutral-600 hover:bg-neutral-800'
+                ? 'bg-white/10 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
             NASA Satellite
@@ -371,19 +370,19 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
           <Button
             size="sm"
             onClick={() => handleSwitchLayer('tactical')}
-            className={`h-6 px-2 text-[10px] rounded-none border font-bold uppercase ${
+            className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
               activeLayer === 'tactical'
-                ? 'bg-yellow-400 text-black border-white'
-                : 'bg-black text-white border-neutral-600 hover:bg-neutral-800'
+                ? 'bg-white/10 text-white font-semibold shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Tactical Dark
+            Dark Vector
           </Button>
         </div>
       </div>
 
       {/* Map Display Container */}
-      <div className="relative flex-1 w-full min-h-0 bg-neutral-950">
+      <div className="relative flex-1 w-full min-h-0 bg-slate-950">
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
         {/* Optical Radar Sweep Line */}
@@ -404,29 +403,29 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
           <Button
             size="sm"
             onClick={handleRecenter}
-            className="h-8 px-2.5 bg-black text-white border-2 border-white rounded-none shadow-hard font-mono text-xs font-bold hover:bg-neutral-900 flex items-center gap-1.5"
+            className="h-8 px-3 glass-panel text-white rounded-xl shadow-lg text-xs font-semibold hover:bg-slate-800 flex items-center gap-1.5 border border-white/10"
           >
-            <MapPin className="w-3.5 h-3.5 text-red-500" />
-            Lock Stranded GPS
+            <MapPin className="w-3.5 h-3.5 text-rose-500" />
+            <span>Lock Coordinates</span>
           </Button>
           <Button
             size="sm"
             onClick={() => setRadarSweeping(!radarSweeping)}
-            className="h-8 px-2.5 bg-black text-white border-2 border-white rounded-none shadow-hard-sm font-mono text-[11px] font-bold hover:bg-neutral-900 flex items-center gap-1.5"
+            className="h-8 px-3 glass-panel text-slate-300 rounded-xl shadow-lg text-xs font-semibold hover:bg-slate-800 flex items-center gap-1.5 border border-white/10"
           >
-            <Radar className={`w-3.5 h-3.5 ${radarSweeping ? 'text-emerald-400 animate-spin' : 'text-neutral-400'}`} />
-            {radarSweeping ? 'Radar Sweep: ON' : 'Radar Sweep: OFF'}
+            <Radar className={`w-3.5 h-3.5 ${radarSweeping ? 'text-emerald-400 animate-spin' : 'text-slate-400'}`} />
+            <span>{radarSweeping ? 'Sweep: ON' : 'Sweep: OFF'}</span>
           </Button>
         </div>
 
         {/* SAR Live Metadata Badge */}
-        <div className="hidden sm:block absolute top-4 right-4 z-[500] bg-black/90 text-white border-2 border-white p-2.5 shadow-hard font-mono text-[10px] space-y-1 max-w-[220px]">
-          <div className="font-bold border-b border-white pb-1 uppercase tracking-wider flex items-center justify-between text-yellow-300">
+        <div className="hidden sm:block absolute top-4 right-4 z-[500] glass-panel rounded-2xl text-white p-3 shadow-xl text-xs space-y-1 max-w-[210px] border border-white/10">
+          <div className="font-bold border-b border-white/5 pb-1 flex items-center justify-between text-amber-300">
             <span>NASA SAR FEED</span>
-            <span className="text-[9px] bg-emerald-600 text-white px-1">ACTIVE</span>
+            <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold">LIVE</span>
           </div>
-          <div className="text-neutral-300 text-[10px] leading-tight">
-            Sentinel-1 C-Band synthetic aperture radar backscatter penetrates clouds, fog, and nighttime terrain.
+          <div className="text-slate-400 text-[11px] leading-relaxed">
+            Sentinel-1 synthetic aperture radar penetrates weather, fog, and night terrain across Kenya.
           </div>
         </div>
       </div>

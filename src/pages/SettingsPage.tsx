@@ -10,10 +10,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   HeartPulse,
-  PhoneCall,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -79,114 +77,114 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-4 md:py-6 space-y-6 font-mono">
+    <div className="w-full max-w-7xl mx-auto px-4 py-2 space-y-5">
       {/* Top Banner */}
-      <div className="bg-black text-white border-2 border-black p-4 shadow-hard flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl flex flex-wrap items-center justify-between gap-3 text-xs border border-white/10">
         <div>
           <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-yellow-300" />
-            <h1 className="text-sm font-black uppercase tracking-wider text-white">
-              KENYA EMERGENCY CONFIGURATION & PROFILE COMMAND
+            <div className="p-2 rounded-xl bg-slate-800 text-amber-300">
+              <Settings className="w-4 h-4" />
+            </div>
+            <h1 className="text-sm font-bold text-white">
+              Emergency Profile & Vehicle Garage
             </h1>
           </div>
-          <p className="text-neutral-400 text-xs mt-0.5">
-            Configure vehicle specs (Kenyan plates), medical emergency cards, and contacts (+254)
+          <p className="text-slate-400 text-xs mt-1">
+            Manage Kenyan vehicle registration, emergency medical card, and +254 contact alerts
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="rounded-none border-white text-white font-mono text-xs">
-            KENYA RELAY PROTOCOL
-          </Badge>
-        </div>
+        <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
+          Kenya Relay Protocol Active
+        </span>
       </div>
 
-      {/* GPS & Corridor Calibration Panel */}
-      <div className="bg-white border-2 border-black p-4 shadow-hard text-xs space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-2">
-          <div className="flex items-center gap-2 font-black uppercase text-black">
-            <MapPin className="w-4 h-4 text-red-600" />
-            KENYAN HIGHWAY TELEMETRY CORRIDOR
+      {/* GPS Corridor Calibration Panel */}
+      <div className="glass-panel rounded-2xl p-4 shadow-lg text-xs space-y-3 border border-white/5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2.5">
+          <div className="flex items-center gap-2 font-semibold text-white">
+            <MapPin className="w-4 h-4 text-rose-400" />
+            Kenyan Highway Corridor Telemetry
           </div>
           <Button
             size="sm"
             onClick={handleSimulateNewLocation}
-            className="rounded-none bg-black text-white hover:bg-neutral-800 text-[11px] h-8 px-2.5 font-bold uppercase flex items-center gap-1"
+            className="rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-8 px-3 font-semibold flex items-center gap-1.5"
           >
             <RefreshCw className="w-3 h-3" />
-            Simulate Kenya Corridor Shift
+            Simulate Corridor Shift
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-neutral-50 p-2.5 border border-black text-[11px]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-900/60 p-3 rounded-xl border border-white/5 text-xs">
           <div>
-            <span className="text-neutral-500 uppercase block">Active Highway Marker:</span>
-            <span className="font-bold text-black">{telemetry.highwayMarker}</span>
+            <span className="text-slate-400 block text-[11px]">Current Highway:</span>
+            <span className="font-semibold text-white mt-0.5 block">{telemetry.highwayMarker}</span>
           </div>
           <div>
-            <span className="text-neutral-500 uppercase block">Coordinates:</span>
-            <span className="font-bold text-black">
+            <span className="text-slate-400 block text-[11px]">GPS Coordinates:</span>
+            <span className="font-semibold text-white mt-0.5 block">
               {telemetry.latitude.toFixed(5)}, {telemetry.longitude.toFixed(5)} (±{telemetry.accuracyMeters}m)
             </span>
           </div>
           <div>
-            <span className="text-neutral-500 uppercase block">Nearest Intersection / Junction:</span>
-            <span className="font-bold text-black">{telemetry.nearestIntersection}</span>
+            <span className="text-slate-400 block text-[11px]">Nearest Exit / Landmark:</span>
+            <span className="font-semibold text-white mt-0.5 block">{telemetry.nearestIntersection}</span>
           </div>
         </div>
       </div>
 
       {/* Medical Emergency Profile Card */}
-      <div className="bg-white border-2 border-black p-4 shadow-hard text-xs space-y-3">
-        <div className="flex items-center justify-between border-b-2 border-black pb-2">
-          <div className="flex items-center gap-2 font-black uppercase text-black">
-            <HeartPulse className="w-4 h-4 text-red-600" />
-            EMERGENCY MEDICAL PROFILE & SHIF/NHIF
+      <div className="glass-panel rounded-2xl p-5 shadow-lg text-xs space-y-3 border border-white/5">
+        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+          <div className="flex items-center gap-2 font-semibold text-white">
+            <HeartPulse className="w-4 h-4 text-rose-400" />
+            Emergency Medical Card & SHIF/NHIF
           </div>
-          <Badge className="rounded-none bg-red-600 text-white font-bold text-[10px]">
-            DISPATCH PAYLOAD READY
-          </Badge>
+          <span className="text-[11px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full">
+            Auto-Attached on SOS
+          </span>
         </div>
 
         <form onSubmit={handleSaveMedical} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1">
-            <Label className="text-[11px] font-bold uppercase text-black">Blood Type</Label>
+            <Label className="text-xs text-slate-300">Blood Type</Label>
             <Input
               value={medical.bloodType}
               onChange={(e) => setMedical({ ...medical, bloodType: e.target.value as any })}
-              className="rounded-none border-2 border-black font-mono text-xs h-9 bg-neutral-50 font-bold"
+              className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 font-bold"
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px] font-bold uppercase text-black">Allergies</Label>
+            <Label className="text-xs text-slate-300">Allergies</Label>
             <Input
               value={medical.allergies}
               onChange={(e) => setMedical({ ...medical, allergies: e.target.value })}
-              className="rounded-none border-2 border-black font-mono text-xs h-9 bg-neutral-50"
+              className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px] font-bold uppercase text-black">Conditions</Label>
+            <Label className="text-xs text-slate-300">Conditions</Label>
             <Input
               value={medical.chronicConditions}
               onChange={(e) => setMedical({ ...medical, chronicConditions: e.target.value })}
-              className="rounded-none border-2 border-black font-mono text-xs h-9 bg-neutral-50"
+              className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
             />
           </div>
           <div className="sm:col-span-2 space-y-1">
-            <Label className="text-[11px] font-bold uppercase text-black">Hospital / SHIF Number</Label>
+            <Label className="text-xs text-slate-300">Preferred Hospital / SHIF ID</Label>
             <Input
               value={`${medical.emergencyCareHospital} • ${medical.nhifShifNumber}`}
               onChange={(e) => setMedical({ ...medical, nhifShifNumber: e.target.value })}
-              className="rounded-none border-2 border-black font-mono text-xs h-9 bg-neutral-50"
+              className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
             />
           </div>
           <div className="flex items-end">
             <Button
               type="submit"
-              className="w-full rounded-none bg-black hover:bg-neutral-800 text-white font-mono font-bold text-xs h-9 uppercase"
+              className="w-full rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs h-9"
             >
-              SAVE MEDICAL DATA
+              Save Medical Card
             </Button>
           </div>
         </form>
@@ -204,46 +202,46 @@ export const SettingsPage: React.FC = () => {
         onContactsChanged={setContacts}
       />
 
-      {/* Kenyan Motorist Emergency Protection Plan Status */}
-      <div className="bg-white border-2 border-black p-5 shadow-hard text-black space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-2">
-          <div className="flex items-center gap-2 font-black text-base uppercase">
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
-            KENYA MOTORIST ROADSIDE PROTECTION PLAN
+      {/* Plan Coverage Overview */}
+      <div className="glass-panel rounded-2xl p-5 shadow-xl text-xs space-y-3 border border-white/10">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2.5">
+          <div className="flex items-center gap-2 font-bold text-sm text-white">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            Kenya Motorist Roadside Protection Plan
           </div>
-          <Badge className="rounded-none bg-emerald-600 text-white font-mono text-xs uppercase font-bold">
-            ACTIVE • 100% COVERED
-          </Badge>
+          <span className="text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
+            Active • 100% Covered
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3 bg-neutral-50 border border-black space-y-1">
-            <div className="font-bold text-black uppercase flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              AA KENYA HEAVY TOWING
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+            <div className="font-semibold text-white flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              AA Kenya Heavy Towing
             </div>
-            <p className="text-[11px] text-neutral-600">
-              Free towing up to 100km to nearest certified garage along all primary A-class corridors.
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Up to 100km free flatbed carry to certified garage on all national A-class corridors.
             </p>
           </div>
 
-          <div className="p-3 bg-neutral-50 border border-black space-y-1">
-            <div className="font-bold text-black uppercase flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              ESCARPMENT WINCHING & MUD
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+            <div className="font-semibold text-white flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              Escarpment Mud & Winching
             </div>
-            <p className="text-[11px] text-neutral-600">
-              Heavy 4x4 recovery on Kinungi, Mai Mahiu, and Salama steep ditch drop-offs.
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Specialized heavy 4x4 rig extraction on Kinungi, Mai Mahiu, and Salama drop-offs.
             </p>
           </div>
 
-          <div className="p-3 bg-neutral-50 border border-black space-y-1">
-            <div className="font-bold text-black uppercase flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              45–60S CASCADE SLA
+          <div className="p-3.5 rounded-xl bg-slate-900/60 border border-white/5 space-y-1">
+            <div className="font-semibold text-white flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              45–60s Automated Cascade
             </div>
-            <p className="text-[11px] text-neutral-600">
-              Automatic failover to Kenya Red Cross or secondary heavy rig if primary is delayed.
+            <p className="text-slate-400 text-[11px] leading-relaxed">
+              Guaranteed escalation to secondary certified responder if unacknowledged within 60s.
             </p>
           </div>
         </div>

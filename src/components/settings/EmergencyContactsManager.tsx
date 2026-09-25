@@ -3,26 +3,25 @@ import { EmergencyContact } from '@/types/sos';
 import { storageService } from '@/services/storage';
 import {
   Users,
+  Plus,
+  Trash2,
   Bell,
   BellOff,
-  Plus,
-  Send,
   Phone,
   Mail,
+  Send,
   CheckCircle2,
-  Trash2,
-  Smartphone,
-  ShieldAlert,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -55,271 +54,228 @@ export const EmergencyContactsManager: React.FC<EmergencyContactsManagerProps> =
     storageService.deleteContact(id);
     const updated = storageService.getContacts();
     onContactsChanged(updated);
-    toast.info('Emergency contact removed');
+    toast.info('Emergency contact deleted.');
   };
 
   const handleAddContact = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim()) {
-      toast.error('Name and phone number are required');
+      toast.error('Contact name and phone number are required.');
       return;
     }
 
-    storageService.addContact({
+    const newContact: EmergencyContact = {
+      id: `cnt-${Date.now()}`,
       name: name.trim(),
       relationship,
       phone: phone.trim(),
       email: email.trim() || undefined,
       notifyOnSos: true,
       alertChannel,
-      lastAlertStatus: 'Acknowledged',
-    });
+    };
 
-    onContactsChanged(storageService.getContacts());
+    storageService.addContact(newContact);
+    const updated = storageService.getContacts();
+    onContactsChanged(updated);
+    toast.success(`${newContact.name} added to Kenya SOS notification list.`);
     setAddModalOpen(false);
-    toast.success(`Emergency contact ${name} added!`);
-
     setName('');
     setPhone('');
     setEmail('');
   };
 
-  const handleSendTestAlert = (contact: EmergencyContact) => {
+  const handleSimulateTestAlert = (contact: EmergencyContact) => {
     setTestAlertRecipient(contact);
     setTestSimModalOpen(true);
-    storageService.playEmergencyAudioTone(800, 0.2, 'sine');
   };
 
   return (
-    <div className="w-full bg-white border-2 border-black p-4 shadow-hard font-mono space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-black" />
-            <h2 className="text-sm font-black uppercase tracking-wider text-black">
-              EMERGENCY CONTACTS & FLEET BROADCAST
-            </h2>
+    <div className="w-full glass-panel rounded-2xl p-5 shadow-xl text-xs space-y-4 border border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+            <Users className="w-4 h-4" />
           </div>
-          <p className="text-xs text-neutral-600 mt-0.5">
-            Automatically sends live GPS coordinates and telemetry link to family & fleet upon 1-tap SOS activation
-          </p>
+          <div>
+            <h2 className="text-sm font-bold text-white">Emergency Contacts (+254 Relay)</h2>
+            <div className="text-[11px] text-slate-400">
+              Automated SMS broadcast dispatched upon SOS button activation
+            </div>
+          </div>
         </div>
 
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          className="rounded-none bg-black hover:bg-neutral-800 text-white font-mono font-bold text-xs h-9 px-3 border border-black shadow-hard-sm flex items-center gap-1.5 uppercase"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          ADD CONTACT
-        </Button>
-      </div>
+        <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
+          <DialogTrigger asChild>
+            <Button
+              size="sm"
+              className="rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs h-9 px-3.5 flex items-center gap-1.5 border border-white/5"
+            >
+              <Plus className="w-4 h-4" />
+              Add Contact
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md p-6 rounded-2xl glass-panel border border-white/10 text-white">
+            <DialogHeader className="border-b border-white/5 pb-3">
+              <DialogTitle className="text-base font-bold text-white">
+                Add Emergency Contact
+              </DialogTitle>
+            </DialogHeader>
 
-      {/* Contacts List */}
-      <div className="space-y-2.5">
-        {contacts.map((contact) => (
-          <div
-            key={contact.id}
-            className="p-3 border-2 border-black bg-neutral-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-hard-sm"
-          >
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-black text-sm uppercase text-black">{contact.name}</span>
-                <Badge variant="outline" className="rounded-none border-black text-[10px] font-bold bg-white text-black">
-                  {contact.relationship}
-                </Badge>
-                {contact.notifyOnSos ? (
-                  <Badge className="rounded-none bg-red-600 text-white font-mono text-[9px] uppercase font-bold">
-                    AUTO-NOTIFY ON SOS
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="rounded-none border-neutral-400 text-neutral-500 text-[9px] uppercase">
-                    MUTED
-                  </Badge>
-                )}
+            <form onSubmit={handleAddContact} className="space-y-3 pt-2">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-300">Contact Full Name</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Grace Mutua"
+                  className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
+                />
               </div>
 
-              <div className="text-xs text-neutral-600 flex flex-wrap items-center gap-3">
-                <span className="flex items-center gap-1 font-bold text-black">
-                  <Phone className="w-3 h-3 text-red-600" /> {contact.phone}
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-300">Relationship</Label>
+                <select
+                  value={relationship}
+                  onChange={(e) => setRelationship(e.target.value as any)}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 px-2"
+                >
+                  <option value="Spouse">Spouse</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Fleet Manager">Fleet Manager</option>
+                  <option value="Mechanic">Mechanic</option>
+                  <option value="Colleague">Colleague</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-300">Kenyan Mobile Number</Label>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+254 7XX XXX XXX"
+                  className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 font-mono"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-300">Alert Mode</Label>
+                <select
+                  value={alertChannel}
+                  onChange={(e) => setAlertChannel(e.target.value as any)}
+                  className="w-full rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 px-2"
+                >
+                  <option value="SMS">SMS Only</option>
+                  <option value="SMS + Call">SMS + Automated Voice Call</option>
+                  <option value="Fleet Radio">Fleet Radio Channel</option>
+                </select>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setAddModalOpen(false)}
+                  className="rounded-xl text-slate-400 hover:text-white text-xs h-9"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs h-9 px-4 font-semibold shadow-md shadow-red-500/20"
+                >
+                  Save Contact
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="space-y-2.5">
+        {contacts.map((c) => (
+          <div
+            key={c.id}
+            className="p-3.5 rounded-2xl bg-slate-900/40 border border-white/5 hover:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-white">{c.name}</span>
+                <span className="text-[10px] font-semibold bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full border border-white/5">
+                  {c.relationship}
                 </span>
-                {contact.email && (
-                  <span className="flex items-center gap-1 text-neutral-700">
-                    <Mail className="w-3 h-3" /> {contact.email}
-                  </span>
-                )}
-                <span className="bg-neutral-200 text-black px-1.5 py-0.2 text-[10px] font-bold">
-                  CHANNEL: {contact.alertChannel}
-                </span>
+              </div>
+              <div className="text-xs text-slate-400 font-mono mt-0.5">
+                {c.phone} • {c.alertChannel}
               </div>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-2 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-black/20">
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
-                variant="outline"
-                onClick={() => handleSendTestAlert(contact)}
-                className="rounded-none border border-black font-mono font-bold text-[11px] h-8 px-2.5 hover:bg-neutral-200 flex items-center gap-1"
+                variant="ghost"
+                onClick={() => handleSimulateTestAlert(c)}
+                className="text-xs text-slate-300 hover:text-white hover:bg-white/5 h-8 px-2.5 rounded-xl border border-white/5"
               >
-                <Send className="w-3 h-3" />
-                Test Dispatch SMS
+                <Send className="w-3.5 h-3.5 mr-1 text-amber-400" />
+                Test SMS
               </Button>
-
               <Button
                 size="sm"
-                variant="outline"
-                onClick={() => handleToggleNotify(contact.id, contact.notifyOnSos)}
-                className={`rounded-none border border-black font-mono font-bold text-[11px] h-8 px-2.5 ${
-                  contact.notifyOnSos ? 'bg-black text-white hover:bg-neutral-800' : 'bg-white text-black'
+                variant="ghost"
+                onClick={() => handleToggleNotify(c.id, c.notifyOnSos)}
+                className={`h-8 px-2.5 rounded-xl text-xs font-semibold ${
+                  c.notifyOnSos
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'bg-slate-800 text-slate-500'
                 }`}
               >
-                {contact.notifyOnSos ? 'Auto Alert: ON' : 'Auto Alert: OFF'}
+                {c.notifyOnSos ? 'Active' : 'Muted'}
               </Button>
-
-              <button
-                type="button"
-                onClick={() => handleDelete(contact.id)}
-                className="p-1.5 text-neutral-500 hover:text-red-600 transition-colors"
-                title="Remove contact"
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDelete(c.id)}
+                className="text-slate-500 hover:text-rose-400 h-8 w-8 p-0"
               >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Add Contact Modal */}
-      <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md border-4 border-black p-0 rounded-none bg-white shadow-hard text-black font-mono">
-          <DialogHeader className="bg-black text-white p-3 border-b-2 border-black">
-            <DialogTitle className="text-sm font-black uppercase tracking-wider text-white">
-              ADD EMERGENCY RECIPIENT
-            </DialogTitle>
-          </DialogHeader>
-
-          <form onSubmit={handleAddContact} className="p-4 space-y-3 text-xs">
-            <div>
-              <label className="block font-bold mb-1">Contact Name:</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Sarah Jenkins (Spouse)"
-                required
-                className="rounded-none border-2 border-black h-8 text-xs font-mono"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block font-bold mb-1">Relationship:</label>
-                <select
-                  value={relationship}
-                  onChange={(e) => setRelationship(e.target.value as any)}
-                  className="w-full rounded-none border-2 border-black h-8 text-xs font-mono px-2 bg-white"
-                >
-                  <option value="Spouse">Spouse</option>
-                  <option value="Parent">Parent</option>
-                  <option value="Fleet Manager">Fleet Manager</option>
-                  <option value="Sibling">Sibling</option>
-                  <option value="Friend">Friend</option>
-                  <option value="Insurance">Insurance</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">Mobile Phone:</label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (303) 555-0192"
-                  required
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-bold mb-1">Email / Fleet Webhook (Optional):</label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="sarah@example.com"
-                className="rounded-none border-2 border-black h-8 text-xs font-mono"
-              />
-            </div>
-
-            <div>
-              <label className="block font-bold mb-1">Notification Priority:</label>
-              <select
-                value={alertChannel}
-                onChange={(e) => setAlertChannel(e.target.value as any)}
-                className="w-full rounded-none border-2 border-black h-8 text-xs font-mono px-2 bg-white"
-              >
-                <option value="SMS + Call">SMS + Automated Voice Call</option>
-                <option value="SMS">High Priority SMS</option>
-                <option value="Fleet Webhook">Fleet Telemetry Webhook</option>
-              </select>
-            </div>
-
-            <div className="pt-2 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAddModalOpen(false)}
-                className="rounded-none border border-black text-xs h-8 px-3"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="rounded-none bg-black hover:bg-neutral-800 text-white text-xs h-8 px-4 font-bold uppercase"
-              >
-                Save Recipient
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Test Alert Simulator Modal */}
+      {/* Test SMS Modal */}
       <Dialog open={testSimModalOpen} onOpenChange={setTestSimModalOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md border-4 border-black p-0 rounded-none bg-white shadow-hard text-black font-mono">
-          <DialogHeader className="bg-red-600 text-white p-3 border-b-2 border-black">
-            <DialogTitle className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
-              <Smartphone className="w-4 h-4" />
-              EMERGENCY BROADCAST SIMULATOR
+        <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md p-6 rounded-2xl glass-panel border border-white/10 text-white">
+          <DialogHeader className="border-b border-white/5 pb-3">
+            <DialogTitle className="text-base font-bold text-white">
+              Simulated SOS SMS Payload
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-4 space-y-3 text-xs">
-            <div className="bg-neutral-900 text-white p-3 border-2 border-black space-y-2">
-              <div className="flex justify-between items-center text-[10px] text-neutral-400 border-b border-neutral-700 pb-1">
-                <span>SMS MESSAGE SENT TO: {testAlertRecipient?.phone}</span>
-                <span className="text-emerald-400 font-bold">DELIVERED NOW</span>
+          {testAlertRecipient && (
+            <div className="space-y-3 pt-2 text-xs">
+              <div className="p-3 rounded-xl bg-slate-900 border border-white/10 font-mono text-[11px] leading-relaxed text-slate-300 space-y-1">
+                <div className="text-rose-400 font-bold">[KENYA SOS RADAR ALERT]</div>
+                <div>Motorist: Brian Mutua (Toyota Prado KDA 849X)</div>
+                <div>Status: CRITICAL ROADSIDE DISTRESS BEACON ACTIVE</div>
+                <div>Location: A104 Kinungi Escarpment Mile 72 (-0.7850, 36.5200)</div>
+                <div>Dispatching Unit: AA Kenya Recovery Unit #884</div>
+                <div>Live Radar Stream: https://sosradar.co.ke/tracking/inc-8849</div>
               </div>
-              <p className="text-xs font-mono leading-relaxed text-yellow-300">
-                🚨 <strong>[SOS RADAR ALERT]</strong>: Your contact triggered an Emergency Roadside Dispatch at I-70 W @ Mile Marker 258.4. Rescuer matched with 12m ETA. Live Radar Tracking Link: https://sos-radar.app/track/SOS-9182
-              </p>
-            </div>
 
-            <div className="p-2 bg-emerald-50 border border-emerald-600 text-emerald-950 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="text-[11px]">
-                Broadcast channel verified. Delivery receipt acknowledged by gateway.
-              </span>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => setTestSimModalOpen(false)}
+                  className="rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs h-9 px-4 font-semibold"
+                >
+                  Close Preview
+                </Button>
+              </div>
             </div>
-
-            <div className="pt-2 flex justify-end">
-              <Button
-                onClick={() => setTestSimModalOpen(false)}
-                className="rounded-none bg-black hover:bg-neutral-800 text-white text-xs h-8 px-4 font-bold uppercase"
-              >
-                Dismiss Test
-              </Button>
-            </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

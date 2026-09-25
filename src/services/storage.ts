@@ -7,6 +7,7 @@ import {
   ChatMessage,
   AuthUser,
   MedicalProfile,
+  RescueProvider,
 } from '@/types/sos';
 import {
   INITIAL_VEHICLES,
@@ -117,6 +118,14 @@ export const storageService = {
     this.saveVehicles(list);
   },
 
+  deleteVehicle(id: string): void {
+    const list = this.getVehicles().filter((v) => v.id !== id);
+    if (list.length > 0 && !list.some((v) => v.isDefault)) {
+      list[0].isDefault = true;
+    }
+    this.saveVehicles(list);
+  },
+
   // --- Contacts ---
   getContacts(): EmergencyContact[] {
     const contacts = getFromStorage<EmergencyContact[]>(STORAGE_KEYS.CONTACTS, INITIAL_CONTACTS);
@@ -183,6 +192,7 @@ export const storageService = {
       isSilentAlarm?: boolean;
       shareMedicalProfile?: boolean;
       directAudioLinkActive?: boolean;
+      assignedProvider?: RescueProvider;
     }
   ): SosIncident {
     const vehicle = options?.selectedVehicle || this.getDefaultVehicle();
@@ -198,6 +208,8 @@ export const storageService = {
       sentAt: new Date().toISOString(),
     }));
 
+    const primaryProv = options?.assignedProvider || { ...MOCK_PRIMARY_PROVIDER };
+
     const incident: SosIncident = {
       id: `KENYA-SOS-${Math.floor(100000 + Math.random() * 900000)}`,
       createdAt: new Date().toISOString(),
@@ -211,9 +223,9 @@ export const storageService = {
       isSilentAlarm: options?.isSilentAlarm || false,
       shareMedicalProfile: options?.shareMedicalProfile !== false,
       directAudioLinkActive: options?.directAudioLinkActive || false,
-      primaryProvider: { ...MOCK_PRIMARY_PROVIDER },
+      primaryProvider: primaryProv,
       backupProvider: { ...MOCK_BACKUP_PROVIDER },
-      assignedProviderId: MOCK_PRIMARY_PROVIDER.id,
+      assignedProviderId: primaryProv.id,
       cascadeSecondsRemaining: 50,
       cascadeTriggered: false,
       coveragePlan: 'Kenya Motorist Emergency Shield (AA Kenya Relay)',
@@ -245,6 +257,10 @@ export const storageService = {
     this.triggerHapticPulse();
 
     return incident;
+  },
+
+  cancelIncident(id?: string): void {
+    this.saveActiveIncident(null);
   },
 
   // --- Haptic Feedback ---

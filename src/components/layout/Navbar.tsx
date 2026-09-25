@@ -1,22 +1,29 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { SosIncident } from '@/types/sos';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ShieldAlert,
-  Radar,
-  Navigation,
-  Settings,
-  Menu,
   Radio,
-  User,
+  MapPin,
+  Settings,
+  PhoneCall,
   LogOut,
-  LogIn,
-  Satellite,
+  Car,
+  Layers,
+  Sparkles,
+  Menu,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { SosIncident } from '@/types/sos';
-import { useAuth } from '@/contexts/AuthContext';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 interface NavbarProps {
   activeIncident: SosIncident | null;
@@ -24,191 +31,150 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ activeIncident }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const navLinks = [
-    { path: '/', label: 'DASHBOARD & RADAR', icon: Radar },
-    {
-      path: '/tracking',
-      label: 'ACTIVE TRACKING',
-      icon: Navigation,
-      badge: activeIncident ? 'LIVE' : undefined,
-    },
-    { path: '/settings', label: 'GARAGE & CONTACTS', icon: Settings },
+    { to: '/', label: 'One-Tap Dispatch' },
+    { to: '/bidding', label: 'Live Bids & Pricing' },
+    { to: '/tracking', label: 'Active Tracking' },
+    { to: '/settings', label: 'Garage & Settings' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-black text-white border-b-4 border-black font-mono">
-      <div className="w-full px-4 h-16 flex items-center justify-between">
-        {/* Logo Brand */}
-        <Link to="/" className="flex items-center gap-2.5 text-white no-underline group">
-          <div className="w-9 h-9 border-2 border-white bg-red-600 flex items-center justify-center shadow-hard-sm group-hover:scale-105 transition-transform">
-            <ShieldAlert className="w-5 h-5 text-white animate-pulse" />
+    <header className="sticky top-0 z-40 w-full glass-panel border-b border-white/5 py-2.5 px-3 sm:px-6">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        {/* Brand Logo: Roadside SOS */}
+        <Link to="/" className="flex items-center gap-2.5 no-underline group">
+          <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+            <ShieldAlert className="w-5 h-5 text-slate-950" />
           </div>
-          <div>
-            <div className="text-base sm:text-lg font-black tracking-tight leading-none uppercase flex items-center gap-1.5">
-              SOS RADAR
-              <span className="text-[10px] bg-yellow-400 text-black px-1 font-bold">SENTINEL-1</span>
-            </div>
-            <div className="text-[9px] text-neutral-400 tracking-widest uppercase">
-              HIGH-SPEED CRISIS ROAD RESCUE
-            </div>
+          <div className="flex flex-col">
+            <span className="font-black text-sm text-white tracking-wider flex items-center gap-1.5 uppercase">
+              Roadside SOS
+            </span>
+            <span className="text-[10px] text-amber-400 font-bold tracking-tight">
+              Emergency Response • Kenya
+            </span>
           </div>
         </Link>
 
-        {/* Center Navigation Links (Desktop) */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
+        {/* Desktop Navigation Links */}
+        <nav className="hidden md:flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-2xl border border-white/5">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.to;
             return (
               <Link
-                key={item.path}
-                to={item.path}
-                className={`h-10 px-3 flex items-center gap-2 border-2 text-xs font-bold uppercase transition-all ${
+                key={link.to}
+                to={link.to}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all no-underline ${
                   isActive
-                    ? 'bg-white text-black border-white shadow-hard-sm'
-                    : 'bg-black text-white border-transparent hover:border-white/50'
+                    ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-500/20'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${item.badge ? 'text-red-500 animate-pulse' : ''}`} />
-                <span>{item.label}</span>
-                {item.badge && (
-                  <span className="bg-red-600 text-white text-[9px] font-black px-1 animate-pulse">
-                    {item.badge}
-                  </span>
-                )}
+                {link.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right Actions: User Profile / Login & Active Incident Warning */}
+        {/* Right Status Actions & Emergency Hotline Hotkey */}
         <div className="flex items-center gap-2">
-          {/* Active Incident Warning Chip */}
-          {activeIncident && (
+          {/* Active Incident Pulsing Badge */}
+          {activeIncident ? (
             <Link
               to="/tracking"
-              className="hidden sm:flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white border-2 border-white px-2.5 py-1 text-xs font-black uppercase tracking-wider animate-pulse no-underline"
+              className="flex items-center gap-1.5 bg-amber-400 text-slate-950 px-2.5 py-1 rounded-xl text-xs font-black uppercase no-underline animate-pulse"
             >
               <Radio className="w-3.5 h-3.5" />
-              <span>DISPATCH ACTIVE</span>
+              <span>Rig En Route</span>
             </Link>
+          ) : (
+            <a
+              href="tel:999"
+              className="hidden sm:flex items-center gap-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 px-3 py-1 rounded-xl text-xs font-bold no-underline transition-colors"
+            >
+              <PhoneCall className="w-3.5 h-3.5 text-rose-400" />
+              <span>Kenya Police 999</span>
+            </a>
           )}
 
-          {/* User Profile or Login CTA */}
+          {/* User Sign In / Profile */}
           {user ? (
-            <div className="hidden sm:flex items-center gap-1.5 bg-neutral-900 border-2 border-white px-2.5 h-10 text-xs">
-              <User className="w-3.5 h-3.5 text-yellow-400" />
-              <div className="text-left">
-                <div className="font-bold text-white text-[11px] leading-tight truncate max-w-[120px]">
-                  {user.name}
-                </div>
-                <div className="text-[9px] text-neutral-400 uppercase leading-none">
-                  {user.role === 'fleet_manager' ? 'Fleet Command' : 'VIP Driver'}
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-300 font-bold hidden sm:inline">
+                {user.name.split(' ')[0]}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => signOut()}
-                className="h-7 w-7 p-0 ml-1 rounded-none text-neutral-400 hover:text-white hover:bg-neutral-800"
-                title="Sign Out"
+                onClick={signOut}
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white"
+                title="Sign out"
               >
-                <LogOut className="w-3.5 h-3.5" />
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           ) : (
-            <Button
-              onClick={() => navigate('/login')}
-              className="h-10 rounded-none bg-yellow-400 hover:bg-yellow-500 text-black border-2 border-white shadow-hard-sm font-mono font-black text-xs px-3 uppercase flex items-center gap-1.5"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              SIGN IN
-            </Button>
+            <Link to="/login">
+              <Button
+                size="sm"
+                className="h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-white/5"
+              >
+                Driver Sign In
+              </Button>
+            </Link>
           )}
 
-          {/* Mobile Menu Hamburger */}
-          <div className="md:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-10 w-10 p-0 rounded-none border-2 border-white bg-black text-white hover:bg-neutral-900"
+          {/* Mobile Navigation Trigger */}
+          <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden h-8 w-8 p-0 text-slate-300 hover:text-white"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-slate-950 border-white/10 text-white p-5 space-y-4">
+              <SheetHeader className="border-b border-white/5 pb-3">
+                <SheetTitle className="text-base font-black text-white flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-amber-400" />
+                  Roadside SOS Kenya
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="space-y-2 pt-2">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileDrawerOpen(false)}
+                    className="block p-3 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-white font-bold text-xs border border-white/5 no-underline"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-white/5 space-y-2">
+                <a
+                  href="tel:999"
+                  className="block p-3 rounded-xl bg-rose-600 text-white font-bold text-xs text-center no-underline"
                 >
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] bg-black text-white border-l-4 border-white p-5 font-mono">
-                <div className="flex flex-col gap-6 mt-4">
-                  <div className="border-b-2 border-white pb-3">
-                    <div className="font-black text-base uppercase">SOS RADAR COMMAND</div>
-                    <div className="text-xs text-neutral-400 mt-1">NASA Sentinel-1 Road Assist</div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    {navLinks.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = location.pathname === item.path;
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`p-3 border-2 text-xs font-black uppercase flex items-center justify-between no-underline ${
-                            isActive
-                              ? 'bg-white text-black border-white'
-                              : 'bg-black text-white border-white/40 hover:border-white'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4" />
-                            <span>{item.label}</span>
-                          </div>
-                          {item.badge && (
-                            <span className="bg-red-600 text-white text-[9px] px-1 font-bold">
-                              {item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-auto border-t-2 border-white/40 pt-4 space-y-3">
-                    {user ? (
-                      <div className="space-y-2">
-                        <div className="text-xs text-neutral-400">Signed in as:</div>
-                        <div className="font-bold text-sm text-yellow-300">{user.name}</div>
-                        <div className="text-[11px] text-neutral-300">{user.plan}</div>
-                        <Button
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            signOut();
-                          }}
-                          className="w-full rounded-none bg-neutral-800 hover:bg-neutral-700 text-white font-mono font-bold text-xs h-9 uppercase border border-white"
-                        >
-                          Sign Out
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => {
-                          setMobileMenuOpen(false);
-                          navigate('/login');
-                        }}
-                        className="w-full rounded-none bg-yellow-400 hover:bg-yellow-500 text-black font-mono font-bold text-xs h-10 uppercase"
-                      >
-                        Sign In / Register
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+                  Dial Kenya Emergency 999
+                </a>
+                <a
+                  href="tel:+254709933000"
+                  className="block p-3 rounded-xl bg-slate-900 text-amber-400 font-bold text-xs text-center border border-amber-400/30 no-underline"
+                >
+                  Call AA Kenya Hotline
+                </a>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

@@ -2,126 +2,122 @@
 
 ## 1. Application Overview
 
-- **Application Name**: SOS RADAR - Emergency Roadside Assistance (Kenya Edition)
-- **Application Description**: A tactical, high-contrast crisis response web application designed for high-stress roadside emergencies in Kenya. The system features an ultra-minimalist interface with a single-tap SOS primary action, immediate haptic and visual feedback, real-time Kenyan highway coordinate and landmark tracking, integrated Kenyan emergency hotlines, and collapsible bento-style data cards for secondary details.
+- **Application Name**: Roadside SOS - High-Stress Emergency Assistance
+- **Application Description**: A streamlined, high-visibility emergency roadside assistance web application engineered to minimize cognitive load, reduce dispatch steps, and provide upfront pricing transparency during vehicle breakdowns and roadside distress.
+- **Design Foundations**:
+  - **Color Palette**: High-contrast dark mode background with high-visibility safety amber/orange (#F59E0B / #F97316) for primary actions and critical alerts.
+  - **Typography**: Bold, highly legible sans-serif typography ensuring fast readability in low-light and stressful environments.
 
 ## 2. Target Users & Core Scenarios
 
 - **Target Users**:
-  - Motorists experiencing breakdowns, accidents, or distress on Kenyan roads and highways.
-  - Fleet and commercial drivers requiring rapid, high-visibility emergency dispatch.
-  - Designated emergency contacts tracking live incident status.
+  - Stranded drivers experiencing vehicle failure on highways, suburban roads, or remote routes.
+  - Drivers requiring instant, fixed-price roadside support with verified arrival times.
 - **Core Scenarios**:
-  - Driver triggers instant assistance with a single tap on the primary SOS button without navigating menus.
-  - Driver receives instant visual status updates and haptic confirmation during low-visibility or night driving conditions.
-  - Driver shares live coordinates and Kenyan highway landmark positions (such as A104 Kinungi Escarpment or Mombasa Road A109) with emergency services.
-  - Driver accesses direct one-touch Kenyan hotlines (999, 112, Red Cross Kenya 1199, AA Kenya, St John Ambulance) or executes silent alarm/medical profile sharing.
+  - Driver opens the application, identifies breakdown type in one tap on the home screen, and initiates dispatch immediately.
+  - Driver reviews and selects verified local provider bids based on upfront fixed pricing, ETA, and vehicle equipment compatibility.
+  - Driver monitors live provider arrival while accessing on-screen safety protocols and vehicle identification data.
 
 ## 3. Page Structure & Functional Specifications
 
 ### Page Structure Tree
 
 ```
-SOS RADAR Web Application
-├── Authentication
-│   ├── Driver Sign-In
-│   └── Account Registration
-├── Tactical Emergency Dashboard
-│   ├── Single-Tap Primary SOS Button
-│   ├── High-Contrast Status Banner
-│   ├── Live Highway Location & Landmark Stream
-│   ├── One-Touch Quick Actions (Silent Alarm, Medical Sharing, Direct Audio Link)
-│   └── Collapsible Bento Cards (Secondary Data)
-│       ├── Vehicle Profile Card
-│       ├── Medical Profile Card
-│       ├── Emergency Contacts Card (+254 Validation)
-│       └── Kenya Emergency Hotlines Direct Dial
-├── Active Rescue Tracking
-│   ├── Tactical Leaflet Map (SAR Overlays & Kenyan Highway Points)
-│   ├── Live Status Readout
-│   ├── Rescuer Details & ETA
-│   └── Masked Communication Channel
-└── Service Resolution
-    └── Incident Summary & Completion Status
+Roadside SOS Web Application
+├── One-Tap Dispatch (Home Screen)
+│   ├── Live Location Map View
+│   ├── 4 Core Diagnostic Tiles
+│   │   ├── Flatbed Tow
+│   │   ├── Flat Tire
+│   │   ├── Dead Battery
+│   │   └── Lockout / Fuel / Winch
+│   └── Quick Dispatch Confirmation Action
+├── Live Bidding & Pricing
+│   ├── Provider Offer Comparison Matrix
+│   ├── Fixed Upfront Price & Breakdown Details
+│   ├── Verified ETA & Provider Rating Badges
+│   └── Offer Selection & Dispatch Lock
+└── Anxiety-Reduction Active Tracking
+    ├── Live ETA Countdown Clock
+    ├── Rescuer Live Location Map
+    ├── Driver & Vehicle Plate Verification Card
+    ├── Roadside Safety Protocols
+    │   ├── Hazard Triangle Reminder
+    │   ├── Stay Belted Notice
+    │   └── Emergency Phone Screen Strobe Mode
+    └── Direct Contact & SOS Escalation
 ```
 
 ### Functional Specifications
 
-#### 1. Authentication
-- **Driver Sign-In & Registration**:
-  - Mobile number authentication supporting Kenyan phone prefixes (+254 7XX XXX XXX / +254 1XX XXX XXX) and password.
-  - Streamlined account creation with minimal required fields to ensure rapid onboarding.
+#### 1. One-Tap Dispatch (Home Screen)
+- **Live Location Map View**:
+  - Displays a high-contrast dark-themed map centered on user real-time GPS coordinates.
+  - Prominently displays detected street/highway address with an option for manual correction if needed.
+- **Diagnostic Selection Tiles**:
+  - Four oversized, high-contrast action tiles positioned for thumb reach:
+    - *Flatbed Tow*: Transmits heavy recovery and flatbed transport requirements.
+    - *Flat Tire*: Requests mobile puncture repair or spare wheel installation.
+    - *Dead Battery*: Requests mobile jump-start or battery test unit.
+    - *Lockout / Fuel / Winch*: Bundles entry lockout assistance, emergency fuel drop, or ditch/incline winch extraction.
+- **Quick Dispatch Confirmation**:
+  - Selecting a tile activates an instant dispatch request action button, moving directly to local provider matching without multi-step forms.
 
-#### 2. Tactical Emergency Dashboard
-- **High-Contrast Crisis Interface**:
-  - Muted dark mode base theme to eliminate screen glare and prevent night blindness.
-  - Deep safety crimson color coding for active critical alerts and primary trigger.
-  - Safety amber color coding for warnings, standby states, and pending dispatches.
-  - Large, zero-jargon typography for instant millisecond readability.
-- **Single-Tap Primary SOS Trigger**:
-  - Massive, centered action button requiring zero nested menu navigation.
-  - Triggers immediate emergency cascade upon a single touch.
-- **Haptic & Visual Confirmation**:
-  - Browser vibration pulse confirmation on trigger activation.
-  - Instant visual state transition confirming dispatch transmission.
-- **Live Highway Location Stream**:
-  - Real-time GPS coordinate acquisition paired with recognized Kenyan highway landmarks (e.g., Nairobi-Nakuru A104 Kinungi Escarpment, Mombasa Road A109, Thika Superhighway A2, Nairobi Expressway).
-  - Manual fallback text input for highway mile marker or nearest landmark when GPS is degraded.
-- **One-Touch Presets**:
-  - Silent Alarm mode: Activates covert emergency dispatch without loud UI alerts or audio triggers.
-  - Medical Profile Sharing: Instantly attaches stored medical notes and allergies to the dispatch payload.
-  - Direct Audio Link: Initiates one-tap emergency call connectivity.
-- **Collapsible Bento-Style Data Cards**:
-  - Clean modular hierarchy keeping secondary details hidden or minimized until expanded.
-  - *Vehicle Profile Card*: Stored vehicle registration number, make, model, and color.
-  - *Medical Notes Card*: Blood type, critical conditions, and emergency instructions.
-  - *Emergency Contacts Card*: Stored Kenyan phone contacts for automated alert dispatch.
-  - *Kenyan Emergency Hotlines Card*: One-tap direct dial for National Police / Emergency (999, 112), Kenya Red Cross (1199), AA Kenya Roadside Rescue (+254 709 933 000), and St John Ambulance (+254 721 225 285).
+#### 2. Live Bidding & Pricing Screen
+- **Provider Comparison Matrix**:
+  - Displays incoming bids from nearby verified recovery units in a clear side-by-side or stacked card matrix.
+  - Highlights key selection parameters per provider:
+    - Verified arrival time (ETA in minutes).
+    - Upfront fixed price (guaranteed total cost with no hidden surcharges).
+    - Equipment match indicator (confirms correct truck/tool capability).
+    - Driver rating and completed rescue count.
+- **Offer Selection & Booking Lock**:
+  - Single-tap confirmation locks in selected provider, fixes the price, and triggers active dispatch.
 
-#### 3. Active Rescue Tracking
-- **Tactical Map View**:
-  - Leaflet map with satellite radar layer overlays and localized Kenyan highway route geometry.
-  - Real-time visual markers for user position, highway landmarks, and approaching rescue unit.
-- **Instant Status Readouts**:
-  - Large-format text indicators without technical jargon (e.g., HELP IS DISPATCHING, RESCUE EN ROUTE, RESCUER ARRIVED).
-- **Rescuer & Dispatch Management**:
-  - Displays rescuer name, vehicle identifier, and dynamic ETA.
-  - Automated provider reassignment if current provider does not confirm within 60 seconds.
-- **In-App Masked Communication**:
-  - Secure text and audio communication link between driver and assigned rescue responder.
+#### 3. Anxiety-Reduction Active Tracking Screen
+- **ETA Countdown Clock**:
+  - Large, high-visibility digital countdown timer indicating remaining minutes to provider arrival.
+- **Live Provider Location Map**:
+  - Real-time map displaying current user location, assigned service vehicle position, and live route path.
+- **Driver & Vehicle Verification Card**:
+  - Displays verified rescuer name, company name, contact button, vehicle model, and prominent license plate number for secure identification.
+- **Roadside Safety Protocols**:
+  - Visual checklist and actionable guidance for stranded motorists:
+    - Reminder to remain inside the vehicle with seatbelts fastened if stopped on active lanes.
+    - Placement instructions for reflective hazard warning triangles.
+    - *Phone Strobe Mode*: Full-screen flashing safety beacon (bright amber/white) to alert oncoming traffic in darkness.
+- **Direct Emergency Channel**:
+  - One-tap calling to assigned driver and one-tap escalation to local emergency hotlines.
 
 ## 4. Business Rules & Core Logic
 
-1. **Zero-Friction Trigger**: Activating the main SOS button executes the emergency dispatch payload immediately without secondary confirmation dialogs.
-2. **Phone Number Formatting**: All phone inputs must conform to Kenyan national and international dialing standards (+254 7XX XXX XXX or +254 1XX XXX XXX).
-3. **Kenyan Highway Contextualization**: Location stream attempts to match GPS coordinates with predefined Kenyan highway corridors (A104, A109, A2, Nairobi Expressway) to enrich dispatch data.
-4. **Automated Cascading Dispatch**: If an assigned roadside provider does not accept the emergency request within 60 seconds, the request cascades automatically to the next available unit.
-5. **Emergency Contact Broadcast**: SOS activation automatically transmits a distress message containing live location and landmark data to all verified emergency contacts.
-6. **Silent Alarm Execution**: Silent alarm activation updates status silently on the backend while displaying a discreet interface state to the user.
+1. **High-Stress Action Hierarchy**: The interface limits user interaction on the home screen to selecting one of the 4 diagnostic tiles and confirming dispatch.
+2. **Fixed Upfront Pricing**: Quoted prices on the bidding screen represent final guaranteed rates; service providers cannot alter agreed amounts after selection.
+3. **Equipment Matching**: The system only displays bids from providers verified to possess necessary gear corresponding to selected breakdown tiles (e.g., flatbed for towing).
+4. **Provider Verification**: All active tracking payloads must include confirmed license plate, provider name, and direct communication relay.
+5. **Safety Strobe Override**: Activating Phone Strobe Mode switches display brightness to maximum with rhythmic high-visibility flashing.
 
 ## 5. Exceptions & Edge Cases
 
 | Scenario | Condition | System Behavior |
 | :--- | :--- | :--- |
-| GPS Unavailable | Browser location permission blocked or device GPS offline | Present high-contrast manual input field prompting for Kenyan highway name, marker, or landmark |
-| Device Vibration Unsupported | User browser or device does not support vibration API | Fall back to immediate high-contrast visual flash and crimson pulse without throwing errors |
-| Rescuer Acceptance Timeout | No provider response within 60 seconds | Automatically cascade ticket to next nearest provider and update status text to SEARCHING BACKUP RESCUE |
-| Zero Service Providers Available | No active responders within operational zone | Display prominent direct call buttons to Kenyan hotlines (999, 112, 1199, AA Kenya, St John) |
-| Invalid Phone Format | Number does not match Kenyan mobile prefix | Flag input field immediately with amber warning and display correct +254 format pattern |
+| Location Permission Denied | Browser GPS access blocked | Present high-contrast manual address / landmark search input immediately |
+| No Active Provider Bids | Zero local units available within operational radius | Display direct emergency hotline dispatch numbers with pre-copied GPS coordinates |
+| Bid Expiry | User does not select a provider within bidding window | Refresh provider list automatically and retain current diagnostic request |
+| Provider Re-route / Delay | Driver ETA extends by more than 5 minutes | Update countdown clock dynamically and display status notification |
 
 ## 6. Acceptance Criteria
 
-1. The user can sign in and register using a valid Kenyan mobile number (+254).
-2. The user can activate an emergency SOS request with a single tap on the central action button.
-3. The application triggers vibration feedback and an immediate visual transition upon SOS activation.
-4. The dashboard displays the user live GPS coordinates alongside recognized Kenyan highway corridors and landmarks.
-5. The user can expand collapsible bento cards to view or update vehicle data, medical notes, emergency contacts, and direct Kenyan emergency hotlines.
-6. The user can trigger silent alarm and medical profile sharing presets with one touch.
-7. The system automatically cascades unaccepted rescue requests to backup providers after 60 seconds.
-8. The tracking interface displays large zero-jargon status updates, rescuer ETA, and tactical map location.
+1. The home screen presents the user location map and 4 large diagnostic tiles (Flatbed Tow, Flat Tire, Dead Battery, Lockout / Fuel / Winch).
+2. Selecting any diagnostic tile allows triggering an emergency assistance search in a single confirmation step.
+3. The bidding screen displays incoming provider offers with verified ETA, fixed upfront price, equipment match, and ratings.
+4. Selecting a provider successfully locks the request and transitions the interface to the active tracking screen.
+5. The active tracking screen displays a prominent live ETA countdown clock and real-time rescuer location map.
+6. The active tracking screen displays verified rescuer vehicle license plate details and safety guidelines.
+7. Activating the emergency phone strobe feature displays a full-screen high-contrast flashing beacon.
 
 ## 7. Out of Scope (Current MVP)
 
-- Third-party social media integrations.
-- OBD-II vehicle diagnostic hardware telemetry.
-- Multi-currency payment gateway processing outside Kenyan national emergency frameworks.
+- In-app roadside insurance policy underwriting and claims processing.
+- Multi-vehicle simultaneous dispatch management.
+- Non-roadside routine maintenance booking and garage scheduling.

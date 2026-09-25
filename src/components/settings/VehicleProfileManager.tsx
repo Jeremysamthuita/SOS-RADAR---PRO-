@@ -4,20 +4,23 @@ import { storageService } from '@/services/storage';
 import {
   Car,
   Plus,
-  CheckCircle2,
   Trash2,
+  CheckCircle2,
+  Star,
+  Fuel,
   Shield,
-  FileText,
-  AlertCircle,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -30,15 +33,41 @@ export const VehicleProfileManager: React.FC<VehicleProfileManagerProps> = ({
   vehicles,
   onVehiclesChanged,
 }) => {
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
-  const [year, setYear] = useState('2023');
+  const [year, setYear] = useState(new Date().getFullYear());
   const [color, setColor] = useState('');
   const [licensePlate, setLicensePlate] = useState('');
   const [type, setType] = useState<VehicleProfile['type']>('SUV / 4WD');
   const [drivetrain, setDrivetrain] = useState<VehicleProfile['drivetrain']>('AWD / 4WD');
   const [notes, setNotes] = useState('');
+
+  const handleAddVehicle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!make.trim() || !model.trim() || !licensePlate.trim()) {
+      toast.error('Make, model, and Kenyan license plate are required.');
+      return;
+    }
+
+    const newVeh = storageService.addVehicle({
+      make: make.trim(),
+      model: model.trim(),
+      year: Number(year),
+      color: color.trim() || 'Silver',
+      licensePlate: licensePlate.trim().toUpperCase(),
+      type,
+      drivetrain,
+      notes: notes.trim() || undefined,
+      isDefault: vehicles.length === 0,
+    });
+
+    const updated = storageService.getVehicles();
+    onVehiclesChanged(updated);
+    toast.success(`Vehicle ${newVeh.licensePlate} added to your Kenyan garage!`);
+    setModalOpen(false);
+    resetForm();
+  };
 
   const handleSetDefault = (id: string) => {
     storageService.setDefaultVehicle(id);
@@ -47,30 +76,18 @@ export const VehicleProfileManager: React.FC<VehicleProfileManagerProps> = ({
     toast.success('Default emergency vehicle updated');
   };
 
-  const handleAddVehicle = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!make.trim() || !model.trim() || !licensePlate.trim()) {
-      toast.error('Make, model, and license plate are required');
+  const handleDelete = (id: string) => {
+    if (vehicles.length <= 1) {
+      toast.error('You must keep at least one registered emergency vehicle.');
       return;
     }
+    storageService.deleteVehicle(id);
+    const updated = storageService.getVehicles();
+    onVehiclesChanged(updated);
+    toast.info('Vehicle removed.');
+  };
 
-    const newV = storageService.addVehicle({
-      make: make.trim(),
-      model: model.trim(),
-      year: parseInt(year, 10) || 2023,
-      color: color.trim() || 'Black',
-      licensePlate: licensePlate.trim().toUpperCase(),
-      type,
-      drivetrain,
-      isDefault: vehicles.length === 0,
-      notes: notes.trim(),
-    });
-
-    onVehiclesChanged(storageService.getVehicles());
-    setAddModalOpen(false);
-    toast.success(`Vehicle ${newV.make} ${newV.model} added to garage!`);
-
-    // Reset fields
+  const resetForm = () => {
     setMake('');
     setModel('');
     setColor('');
@@ -79,198 +96,199 @@ export const VehicleProfileManager: React.FC<VehicleProfileManagerProps> = ({
   };
 
   return (
-    <div className="w-full bg-white border-2 border-black p-4 shadow-hard font-mono space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Car className="w-4 h-4 text-black" />
-            <h2 className="text-sm font-black uppercase tracking-wider text-black">
-              REGISTERED VEHICLE PROFILES
-            </h2>
+    <div className="w-full glass-panel rounded-2xl p-5 shadow-xl text-xs space-y-4 border border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+            <Car className="w-4 h-4" />
           </div>
-          <p className="text-xs text-neutral-600 mt-0.5">
-            Auto-fills dispatch telemetry so tow operators arrive with correct flatbed or winch specs
-          </p>
+          <div>
+            <h2 className="text-sm font-bold text-white">Kenyan Motorist Garage</h2>
+            <div className="text-[11px] text-slate-400">
+              Vehicle specs help dispatchers choose flatbeds vs 4x4 winches
+            </div>
+          </div>
         </div>
 
-        <Button
-          onClick={() => setAddModalOpen(true)}
-          className="rounded-none bg-black hover:bg-neutral-800 text-white font-mono font-bold text-xs h-9 px-3 border border-black shadow-hard-sm flex items-center gap-1.5 uppercase"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          ADD VEHICLE
-        </Button>
-      </div>
-
-      {/* Vehicle Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {vehicles.map((veh) => {
-          return (
-            <div
-              key={veh.id}
-              className={`p-3.5 border-2 border-black transition-all flex flex-col justify-between ${
-                veh.isDefault ? 'bg-yellow-50 shadow-hard' : 'bg-white hover:bg-neutral-50'
-              }`}
+        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+          <DialogTrigger asChild>
+            <Button
+              size="sm"
+              className="rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs h-9 px-3.5 flex items-center gap-1.5 border border-white/5"
             >
-              <div>
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-black text-sm uppercase text-black">
-                      {veh.year} {veh.make} {veh.model}
-                    </div>
-                    <div className="text-xs text-neutral-600 mt-0.5 font-bold">
-                      Color: {veh.color} • {veh.type}
-                    </div>
-                  </div>
+              <Plus className="w-4 h-4" />
+              Add Vehicle
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md p-6 rounded-2xl glass-panel border border-white/10 text-white">
+            <DialogHeader className="border-b border-white/5 pb-3">
+              <DialogTitle className="text-base font-bold text-white">
+                Register Vehicle Profile
+              </DialogTitle>
+            </DialogHeader>
 
-                  {veh.isDefault ? (
-                    <Badge className="rounded-none bg-black text-white font-mono text-[10px] uppercase font-bold shrink-0">
-                      PRIMARY (SOS)
-                    </Badge>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleSetDefault(veh.id)}
-                      className="rounded-none border border-black text-[10px] h-6 px-2 font-bold uppercase hover:bg-black hover:text-white"
-                    >
-                      Set As Default
-                    </Button>
-                  )}
+            <form onSubmit={handleAddVehicle} className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Make</Label>
+                  <Input
+                    value={make}
+                    onChange={(e) => setMake(e.target.value)}
+                    placeholder="e.g. Toyota"
+                    className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
+                  />
                 </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="bg-black text-white px-2 py-0.5 font-bold text-xs uppercase tracking-widest">
-                    {veh.licensePlate}
-                  </span>
-                  <Badge variant="outline" className="rounded-none border-black text-[10px] font-bold uppercase">
-                    {veh.drivetrain}
-                  </Badge>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Model</Label>
+                  <Input
+                    value={model}
+                    onChange={(e) => setModel(e.target.value)}
+                    placeholder="e.g. Land Cruiser Prado"
+                    className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
+                  />
                 </div>
-
-                {veh.notes && (
-                  <div className="mt-2.5 p-2 bg-neutral-100 border-l-2 border-black text-[11px] text-neutral-800">
-                    <span className="font-bold text-black uppercase">Towing Requirement: </span>
-                    {veh.notes}
-                  </div>
-                )}
               </div>
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Add Vehicle Modal */}
-      <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] md:max-w-md border-4 border-black p-0 rounded-none bg-white shadow-hard text-black font-mono">
-          <DialogHeader className="bg-black text-white p-3 border-b-2 border-black">
-            <DialogTitle className="text-sm font-black uppercase tracking-wider text-white">
-              ADD VEHICLE PROFILE
-            </DialogTitle>
-          </DialogHeader>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Year</Label>
+                  <Input
+                    type="number"
+                    value={year}
+                    onChange={(e) => setYear(Number(e.target.value))}
+                    className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Color</Label>
+                  <Input
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    placeholder="e.g. Pearl White"
+                    className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9"
+                  />
+                </div>
+              </div>
 
-          <form onSubmit={handleAddVehicle} className="p-4 space-y-3 text-xs">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block font-bold mb-1">Make:</label>
-                <Input
-                  value={make}
-                  onChange={(e) => setMake(e.target.value)}
-                  placeholder="e.g. Subaru"
-                  required
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">Model:</label>
-                <Input
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  placeholder="e.g. Outback"
-                  required
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block font-bold mb-1">Year:</label>
-                <Input
-                  type="number"
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  placeholder="2023"
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold mb-1">Color:</label>
-                <Input
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  placeholder="e.g. Blue"
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block font-bold mb-1">License Plate:</label>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-300">Kenyan Number Plate</Label>
                 <Input
                   value={licensePlate}
                   onChange={(e) => setLicensePlate(e.target.value)}
-                  placeholder="e.g. SOS-7729"
-                  required
-                  className="rounded-none border-2 border-black h-8 text-xs font-mono uppercase"
+                  placeholder="KDA 849X"
+                  className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 uppercase font-bold"
                 />
               </div>
-              <div>
-                <label className="block font-bold mb-1">Drivetrain:</label>
-                <select
-                  value={drivetrain}
-                  onChange={(e) => setDrivetrain(e.target.value as any)}
-                  className="w-full rounded-none border-2 border-black h-8 text-xs font-mono px-2 bg-white"
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Body Type</Label>
+                  <select
+                    value={type}
+                    onChange={(e) => setType(e.target.value as any)}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 px-2"
+                  >
+                    <option value="SUV / 4WD">SUV / 4WD</option>
+                    <option value="Saloon">Saloon</option>
+                    <option value="Commercial Truck">Commercial Truck</option>
+                    <option value="Matatu / Van">Matatu / Van</option>
+                    <option value="EV / Hybrid">EV / Hybrid</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-300">Drivetrain</Label>
+                  <select
+                    value={drivetrain}
+                    onChange={(e) => setDrivetrain(e.target.value as any)}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-9 px-2"
+                  >
+                    <option value="AWD / 4WD">AWD / 4WD</option>
+                    <option value="2WD">2WD</option>
+                    <option value="Heavy Commercial">Heavy Commercial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-xl text-slate-400 hover:text-white text-xs h-9"
                 >
-                  <option value="AWD / 4WD">AWD / 4WD (Flatbed Required)</option>
-                  <option value="FWD">FWD</option>
-                  <option value="RWD">RWD</option>
-                  <option value="Dual Motor EV">Dual Motor EV</option>
-                </select>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white text-xs h-9 px-4 font-semibold shadow-md shadow-red-500/20"
+                >
+                  Save Vehicle
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {vehicles.map((veh) => (
+          <div
+            key={veh.id}
+            className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+              veh.isDefault
+                ? 'bg-slate-900/80 border-amber-500/30 shadow-lg'
+                : 'bg-slate-900/40 border-white/5 hover:border-white/10'
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-sm text-white">
+                  {veh.year} {veh.make} {veh.model}
+                </span>
+                <span className="font-mono font-bold text-xs bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                  {veh.licensePlate}
+                </span>
+              </div>
+
+              <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                <div>Type: <span className="text-white">{veh.type}</span></div>
+                <div>Drive: <span className="text-white">{veh.drivetrain}</span></div>
+                <div>Color: <span className="text-white">{veh.color}</span></div>
+                <div>Staging: <span className="text-emerald-400 font-medium">Ready</span></div>
               </div>
             </div>
 
-            <div>
-              <label className="block font-bold mb-1">Tow Operator Instructions / Notes:</label>
-              <Input
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Flatbed required only, low ground clearance"
-                className="rounded-none border-2 border-black h-8 text-xs font-mono"
-              />
-            </div>
+            <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between">
+              {veh.isDefault ? (
+                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Primary Staged Vehicle
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleSetDefault(veh.id)}
+                  className="text-slate-400 hover:text-white text-[11px] h-7 px-2"
+                >
+                  Set as Primary
+                </Button>
+              )}
 
-            <div className="pt-2 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAddModalOpen(false)}
-                className="rounded-none border border-black text-xs h-8 px-3"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="rounded-none bg-black hover:bg-neutral-800 text-white text-xs h-8 px-4 font-bold uppercase"
-              >
-                Save Vehicle
-              </Button>
+              {vehicles.length > 1 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDelete(veh.id)}
+                  className="text-slate-500 hover:text-rose-400 text-xs h-7 w-7 p-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -59,146 +59,121 @@ export const RescuerProfileCard: React.FC<RescuerProfileCardProps> = ({
   };
 
   return (
-    <div className="w-full bg-white border-2 border-black p-4 shadow-hard font-mono space-y-4">
+    <div className="w-full glass-panel rounded-2xl p-5 shadow-xl text-xs space-y-4 border border-white/10">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-black pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
         <div className="flex items-center gap-3">
-          <img
-            src={provider.driverAvatar}
-            alt={provider.driverName}
-            className="w-12 h-12 object-cover border-2 border-black shadow-hard-sm rounded-none"
-          />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+            <Truck className="w-5 h-5" />
+          </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-sm uppercase tracking-tight text-black">
-                {provider.driverName}
-              </span>
-              <Badge variant="outline" className="rounded-none border-black bg-yellow-400 text-black font-bold text-[10px] px-1 py-0 uppercase">
-                {provider.tier}
-              </Badge>
-            </div>
-            <div className="text-xs text-neutral-600 flex items-center gap-2 mt-0.5">
+            <div className="font-bold text-sm text-white flex items-center gap-2">
               <span>{provider.companyName}</span>
-              <span className="flex items-center text-black font-bold">
-                <Star className="w-3 h-3 text-amber-500 fill-amber-500 mr-0.5" />
-                {provider.rating} ({provider.completedRescues} rescues)
+              <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                AA Verified
               </span>
+            </div>
+            <div className="text-slate-400 text-xs mt-0.5">
+              Unit Plate: <span className="text-white font-mono font-semibold">{provider.licensePlate}</span>
             </div>
           </div>
         </div>
 
-        {/* Live ETA Box */}
-        <div className="bg-black text-white p-2 border border-black text-right shrink-0">
-          <div className="text-[10px] text-neutral-400 uppercase tracking-widest flex items-center justify-end gap-1">
-            <Clock className="w-3 h-3 text-red-500" /> LIVE ETA
-          </div>
-          <div className="text-xl font-black text-yellow-300 leading-none">
-            {provider.currentEtaMinutes} MINS
-          </div>
-          <div className="text-[10px] text-neutral-300">
-            {provider.distanceMiles} miles away
+        <div className="text-right">
+          <div className="text-xs text-slate-400">Current ETA</div>
+          <div className="text-xl font-extrabold text-amber-300 font-mono">
+            {provider.currentEtaMinutes} mins
           </div>
         </div>
       </div>
 
-      {/* Vehicle Specs & Masked Telephony Line */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-neutral-50 p-2.5 border border-black">
-        <div className="space-y-0.5">
-          <span className="text-[10px] text-neutral-500 uppercase block">Rescuer Vehicle:</span>
-          <div className="font-bold flex items-center gap-1.5 text-black">
-            <Truck className="w-3.5 h-3.5" />
-            <span className="line-clamp-1">{provider.vehicleType}</span>
-          </div>
-          <span className="inline-block bg-black text-white text-[10px] px-1 font-mono font-bold">
-            PLATE: {provider.licensePlate}
-          </span>
+      {/* Progress Milestone Line */}
+      <div className="space-y-1.5 pt-1">
+        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+          <span>Mission Progress</span>
+          <span className="text-white capitalize">{incidentStatus.replace('_', ' ')}</span>
         </div>
-
-        <div className="space-y-0.5 sm:border-l sm:border-black/30 sm:pl-3">
-          <span className="text-[10px] text-neutral-500 uppercase block">In-App Masked Routing:</span>
-          <div className="font-bold text-red-700 font-mono text-[11px]">
-            {provider.phoneMasked}
-          </div>
-          <span className="text-[10px] text-neutral-600 block">
-            Protects driver & rescuer private cell numbers
-          </span>
-        </div>
-      </div>
-
-      {/* Progress Stages Pipeline */}
-      <div className="space-y-1.5">
-        <div className="flex justify-between text-[11px] font-bold text-neutral-700">
-          <span>DISPATCH PIPELINE</span>
-          <span className="text-red-600 uppercase font-black">{stages[currentStageIndex]?.label}</span>
-        </div>
-        <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-bold">
-          {stages.map((st, idx) => {
-            const isCompleted = idx <= currentStageIndex;
-            const isCurrent = idx === currentStageIndex;
+        <div className="grid grid-cols-4 gap-1.5">
+          {stages.map((st, i) => {
+            const isDone = i <= currentStageIndex;
             return (
-              <div
-                key={st.key}
-                className={`p-1.5 border border-black uppercase transition-colors ${
-                  isCurrent
-                    ? 'bg-red-600 text-white font-black shadow-hard-sm'
-                    : isCompleted
-                    ? 'bg-black text-white'
-                    : 'bg-neutral-100 text-neutral-400'
-                }`}
-              >
-                {st.label}
+              <div key={st.key} className="space-y-1 text-center">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    isDone ? 'bg-gradient-to-r from-red-600 to-rose-500' : 'bg-slate-800'
+                  }`}
+                />
+                <span className={`text-[10px] block ${isDone ? 'text-white font-bold' : 'text-slate-500'}`}>
+                  {st.label}
+                </span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t-2 border-black">
-        <Button
-          onClick={onOpenCall}
-          className="rounded-none bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-xs h-10 border-2 border-black shadow-hard-sm flex items-center justify-center gap-1.5"
-        >
-          <PhoneCall className="w-3.5 h-3.5" />
-          MASKED CALL
-        </Button>
+      {/* Rescuer Operator Data */}
+      <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 flex items-center justify-between">
+        <div>
+          <span className="text-slate-400 text-[11px] block">Assigned Responder</span>
+          <span className="font-bold text-white text-xs mt-0.5 block">{provider.driverName}</span>
+        </div>
+        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 text-amber-300 px-2 py-1 rounded-lg text-xs font-semibold">
+          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+          <span>{provider.rating.toFixed(1)}</span>
+        </div>
+      </div>
 
+      {/* Action Buttons: Chat, Call, Share, Cancel */}
+      <div className="grid grid-cols-2 gap-2 pt-1">
         <Button
           onClick={onOpenChat}
-          className="rounded-none bg-black hover:bg-neutral-800 text-white font-mono font-bold text-xs h-10 border-2 border-black shadow-hard-sm flex items-center justify-center gap-1.5"
+          className="rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-10 font-semibold flex items-center justify-center gap-2 border border-white/5"
         >
-          <MessageSquare className="w-3.5 h-3.5 text-yellow-400" />
-          DIRECT CHAT
+          <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+          <span>Masked Chat</span>
         </Button>
 
         <Button
-          variant="outline"
+          onClick={onOpenCall}
+          className="rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-10 font-semibold flex items-center justify-center gap-2 border border-white/5"
+        >
+          <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Encrypted Call</span>
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between pt-2 border-t border-white/5">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleShareLiveLink}
-          className="rounded-none border-2 border-black font-mono font-bold text-xs h-10 hover:bg-neutral-100 flex items-center justify-center gap-1.5"
+          className="text-slate-400 hover:text-white hover:bg-white/5 text-xs h-8 px-2.5 rounded-lg flex items-center gap-1.5"
         >
           <Share2 className="w-3.5 h-3.5" />
-          SHARE TRACKER
+          Share Live Link
         </Button>
 
-        {onStatusAdvance && currentStageIndex < 3 ? (
+        {onStatusAdvance && (
           <Button
-            variant="outline"
+            size="sm"
             onClick={onStatusAdvance}
-            className="rounded-none border-2 border-black font-mono font-bold text-xs h-10 bg-yellow-400 text-black hover:bg-yellow-500 flex items-center justify-center gap-1"
+            className="rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs h-8 px-3 font-semibold"
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            ADVANCE STAGE
+            Next Stage
           </Button>
-        ) : onCancelIncident ? (
+        )}
+
+        {onCancelIncident && (
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={onCancelIncident}
-            className="rounded-none border-2 border-black font-mono font-bold text-xs h-10 text-red-600 hover:bg-red-50 flex items-center justify-center gap-1"
+            className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-xs h-8 px-2.5 rounded-lg"
           >
-            <XCircle className="w-3.5 h-3.5" />
-            CANCEL SOS
+            Cancel Request
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );
