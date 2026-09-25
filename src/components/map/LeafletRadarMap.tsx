@@ -25,7 +25,57 @@ interface LeafletRadarMapProps {
   showRadarSweep?: boolean;
 }
 
-type MapLayerType = 'sentinel1' | 'viirs' | 'tactical';
+type MapLayerType = 'osm' | 'terrain' | 'dark';
+
+const buildFallbackRoute = (start: [number, number], end: [number, number]): [number, number][] => {
+  const steps = 24;
+  const points: [number, number][] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const ratio = i / steps;
+    const lat = start[0] + (end[0] - start[0]) * ratio;
+    const lng = start[1] + (end[1] - start[1]) * ratio;
+    points.push([lat, lng]);
+  }
+  return points;
+};
+
+const fetchDrivingRoute = async (
+  start: [number, number],
+  end: [number, number]
+): Promise<{ points: [number, number][]; distanceKm: number; etaMinutes: number }> => {
+  const [startLat, startLng] = start;
+  const [endLat, endLng] = end;
+
+  const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson&alternatives=false`;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`OSRM request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const route = data?.routes?.[0];
+    if (!route || !route.geometry || !Array.isArray(route.geometry.coordinates)) {
+      throw new Error('No OSRM route geometry returned');
+    }
+
+    const points: [number, number][] = route.geometry.coordinates.map(([lng, lat]: [number, number]) => [lat, lng]);
+    const distanceKm = (route.distance || 0) / 1000;
+    const etaMinutes = Math.max(1, Math.round((route.duration || 0) / 60));
+
+    return { points, distanceKm, etaMinutes };
+  } catch (error) {
+    console.warn('OSRM routing unavailable, using fallback route.', error);
+    const fallback = buildFallbackRoute(start, end);
+    const straightDistanceKm = Math.hypot(end[0] - start[0], end[1] - start[1]) * 111.32;
+    return {
+      points: fallback,
+      distanceKm: Number(straightDistanceKm.toFixed(1)),
+      etaMinutes: Math.max(2, Math.round(straightDistanceKm / 0.9)),
+    };
+  }
+};
 
 export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
   userTelemetry,
@@ -42,43 +92,39 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
   const routeLineRef = useRef<L.Polyline | null>(null);
   const hotspotLayersRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const motionPositionRef = useRef<[number, number] | null>(null);
 
-  const [activeLayer, setActiveLayer] = useState<MapLayerType>('sentinel1');
+  const [activeLayer, setActiveLayer] = useState<MapLayerType>('osm');
   const [activeFilter, setActiveFilter] = useState<'all' | 'accidents' | 'ice' | 'depots'>('all');
   const [radarSweeping, setRadarSweeping] = useState<boolean>(showRadarSweep);
+  const [routeSummary, setRouteSummary] = useState({ distanceKm: 0, etaMinutes: 0 });
 
-  // Layer URL mapping
   const getTileConfig = (type: MapLayerType) => {
     switch (type) {
-      case 'sentinel1':
-        // NASA GIBS Sentinel-1 Synthetic Aperture Radar (SAR) Normalized Backscatter Imagery
+      case 'terrain':
         return {
-          url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/Sentinel1A_B_C_D_SAR_GRD_Normalized_Radar_Backscatter/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png',
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
           options: {
-            maxZoom: 16,
-            minZoom: 1,
-            attribution: 'NASA EOSDIS GIBS / ESA Sentinel-1 SAR Radar',
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
           },
         };
-      case 'viirs':
-        // NASA GIBS TrueColor Earth satellite imagery
+      case 'dark':
         return {
-          url: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg',
-          options: {
-            maxZoom: 16,
-            minZoom: 1,
-            attribution: 'NASA EOSDIS GIBS / Suomi NPP VIIRS',
-          },
-        };
-      case 'tactical':
-      default:
-        // High contrast Tactical Dark CartoDB
-        return {
-          url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
+          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
           options: {
             maxZoom: 19,
             subdomains: 'abcd',
-            attribution: 'CartoDB Dark Tactical Radar',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+          },
+        };
+      case 'osm':
+      default:
+        return {
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          options: {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors',
           },
         };
     }
@@ -96,11 +142,11 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
       center: [userLat, userLng],
       zoom: 12,
       zoomControl: false,
-      attributionControl: false,
+      attributionControl: true,
+      scrollWheelZoom: true,
     });
 
-    // Add Base layer (Sentinel-1 default)
-    const initialConfig = getTileConfig('sentinel1');
+    const initialConfig = getTileConfig('osm');
     const baseTile = L.tileLayer(initialConfig.url, initialConfig.options).addTo(map);
     tileLayerRef.current = baseTile;
 
@@ -258,7 +304,6 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
     });
   }, [activeFilter, onSelectHotspot]);
 
-  // Update Rescuer Marker & Trajectory Line
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -272,57 +317,118 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
         map.removeLayer(routeLineRef.current);
         routeLineRef.current = null;
       }
+      motionPositionRef.current = null;
+      setRouteSummary({ distanceKm: 0, etaMinutes: 0 });
       return;
     }
 
-    const rescuerPos = activeProvider.currentCoordinates;
-    const userPos: [number, number] = [userTelemetry.latitude, userTelemetry.longitude];
+    let cancelled = false;
+    const startPosition: [number, number] = activeProvider.currentCoordinates;
+    const endPosition: [number, number] = [userTelemetry.latitude, userTelemetry.longitude];
 
-    const rescuerIcon = L.divIcon({
-      className: 'rescuer-radar-pin',
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
-      html: `
-        <div class="relative w-11 h-11 flex items-center justify-center">
-          <div class="w-10 h-10 border-2 border-white bg-yellow-400 flex flex-col items-center justify-center shadow-hard font-mono text-[10px] font-black text-black">
-            <span class="text-xs">🚜</span>
-            <span class="leading-none text-[8px] tracking-tight">RESCUE</span>
-          </div>
-          <div class="absolute -top-5 whitespace-nowrap bg-black text-yellow-300 text-[9px] font-bold px-1 py-0.2 border border-white tracking-widest uppercase">
-            ${activeProvider.currentEtaMinutes}M ETA
-          </div>
-        </div>
-      `,
-    });
+    const proceedWithRoute = async () => {
+      const route = await fetchDrivingRoute(startPosition, endPosition);
+      if (cancelled) return;
 
-    if (rescuerMarkerRef.current) {
-      rescuerMarkerRef.current.setLatLng(rescuerPos);
-    } else {
-      rescuerMarkerRef.current = L.marker(rescuerPos, { icon: rescuerIcon, zIndexOffset: 990 })
-        .addTo(map)
-        .bindPopup(`
-          <div class="font-mono text-xs p-1 bg-black text-white border-2 border-white">
-            <div class="font-bold text-yellow-300 p-1">DISPATCHED: ${activeProvider.companyName}</div>
-            <div class="mt-1"><strong>Driver:</strong> ${activeProvider.driverName}</div>
-            <div><strong>Vehicle:</strong> ${activeProvider.vehicleType}</div>
-            <div class="text-red-400 font-bold mt-1">Live ETA: ${activeProvider.currentEtaMinutes} mins</div>
-          </div>
-        `);
-    }
+      setRouteSummary({
+        distanceKm: route.distanceKm,
+        etaMinutes: route.etaMinutes,
+      });
 
-    if (routeLineRef.current) {
-      routeLineRef.current.setLatLngs([rescuerPos, userPos]);
-    } else {
-      routeLineRef.current = L.polyline([rescuerPos, userPos], {
+      const routePoints = route.points.length > 1 ? route.points : buildFallbackRoute(startPosition, endPosition);
+
+      if (routeLineRef.current) {
+        map.removeLayer(routeLineRef.current);
+      }
+
+      routeLineRef.current = L.polyline(routePoints, {
         color: '#FFCC00',
         weight: 4,
         dashArray: '8, 8',
       }).addTo(map);
-    }
 
-    const bounds = L.latLngBounds([userPos, rescuerPos]);
-    map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
-  }, [activeProvider, userTelemetry]);
+      const rescuerIcon = L.divIcon({
+        className: 'rescuer-radar-pin',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22],
+        html: `
+          <div class="relative w-11 h-11 flex items-center justify-center">
+            <div class="w-10 h-10 border-2 border-white bg-yellow-400 flex flex-col items-center justify-center shadow-hard font-mono text-[10px] font-black text-black">
+              <span class="text-xs">🚜</span>
+              <span class="leading-none text-[8px] tracking-tight">RESCUE</span>
+            </div>
+            <div class="absolute -top-5 whitespace-nowrap bg-black text-yellow-300 text-[9px] font-bold px-1 py-0.2 border border-white tracking-widest uppercase">
+              ${route.etaMinutes}M ETA
+            </div>
+          </div>
+        `,
+      });
+
+      if (rescuerMarkerRef.current) {
+        rescuerMarkerRef.current.setIcon(rescuerIcon);
+      } else {
+        rescuerMarkerRef.current = L.marker(routePoints[0], { icon: rescuerIcon, zIndexOffset: 990 })
+          .addTo(map)
+          .bindPopup(`
+            <div class="font-mono text-xs p-1 bg-black text-white border-2 border-white">
+              <div class="font-bold text-yellow-300 p-1">DISPATCHED: ${activeProvider.companyName}</div>
+              <div class="mt-1"><strong>Driver:</strong> ${activeProvider.driverName}</div>
+              <div><strong>Vehicle:</strong> ${activeProvider.vehicleType}</div>
+              <div class="text-red-400 font-bold mt-1">Live ETA: ${route.etaMinutes} mins</div>
+            </div>
+          `);
+      }
+
+      const totalDurationMs = 2200 + Math.max(0, (route.etaMinutes || 1) * 1200);
+      const startTime = performance.now();
+      let rafId = 0;
+
+      const animateRescuer = (time: number) => {
+        if (cancelled) return;
+
+        const progress = Math.min((time - startTime) / totalDurationMs, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const routeDistance = Math.max(1, routePoints.length - 1);
+        const targetIndex = Math.min(routeDistance * eased, routeDistance);
+        const segmentIndex = Math.min(Math.floor(targetIndex), routePoints.length - 2);
+        const segmentProgress = targetIndex - segmentIndex;
+
+        const [startLat, startLng] = routePoints[segmentIndex];
+        const [endLat, endLng] = routePoints[segmentIndex + 1];
+        const currentPosition: [number, number] = [
+          startLat + (endLat - startLat) * segmentProgress,
+          startLng + (endLng - startLng) * segmentProgress,
+        ];
+
+        motionPositionRef.current = currentPosition;
+        rescuerMarkerRef.current?.setLatLng(currentPosition);
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animateRescuer);
+        } else {
+          rescuerMarkerRef.current?.setLatLng(endPosition);
+          if (routeLineRef.current) {
+            routeLineRef.current.setLatLngs(routePoints);
+          }
+        }
+      };
+
+      rafId = requestAnimationFrame(animateRescuer);
+
+      const bounds = L.latLngBounds(routePoints);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(rafId);
+      };
+    };
+
+    proceedWithRoute();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProvider?.id, activeProvider?.companyName, activeProvider?.vehicleType, activeProvider?.currentEtaMinutes, userTelemetry.latitude, userTelemetry.longitude]);
 
   const handleRecenter = () => {
     if (!mapInstanceRef.current) return;
@@ -336,54 +442,52 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
         <div className="flex items-center gap-2">
           <Satellite className="w-4 h-4 text-emerald-400 animate-pulse" />
           <span className="text-xs font-bold tracking-tight text-white">
-            SAR Live Radar
+            Live Route Map
           </span>
           <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold px-2 py-0.5 rounded-full">
-            All-Weather
+            OSM + OSRM
           </span>
         </div>
 
-        {/* Satellite Imagery Layer Selector */}
         <div className="flex items-center gap-1.5 text-xs">
           <Button
             size="sm"
-            onClick={() => handleSwitchLayer('sentinel1')}
+            onClick={() => handleSwitchLayer('osm')}
             className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
-              activeLayer === 'sentinel1'
+              activeLayer === 'osm'
                 ? 'bg-white/10 text-white font-semibold shadow-sm'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Sentinel-1
+            OSM
           </Button>
           <Button
             size="sm"
-            onClick={() => handleSwitchLayer('viirs')}
+            onClick={() => handleSwitchLayer('terrain')}
             className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
-              activeLayer === 'viirs'
+              activeLayer === 'terrain'
                 ? 'bg-white/10 text-white font-semibold shadow-sm'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            NASA Satellite
+            Terrain
           </Button>
           <Button
             size="sm"
-            onClick={() => handleSwitchLayer('tactical')}
+            onClick={() => handleSwitchLayer('dark')}
             className={`h-7 px-2.5 text-[11px] rounded-xl font-medium transition-all ${
-              activeLayer === 'tactical'
+              activeLayer === 'dark'
                 ? 'bg-white/10 text-white font-semibold shadow-sm'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Dark Vector
+            Dark
           </Button>
         </div>
       </div>
 
-      {/* Map Display Container */}
       <div className="relative flex-1 w-full min-h-0 bg-slate-950">
-        <div ref={mapContainerRef} className="w-full h-full z-0" />
+        <div ref={mapContainerRef} className="w-full h-full min-h-[320px] z-0" />
 
         {/* Optical Radar Sweep Line */}
         {radarSweeping && (
@@ -418,14 +522,13 @@ export const LeafletRadarMap: React.FC<LeafletRadarMapProps> = ({
           </Button>
         </div>
 
-        {/* SAR Live Metadata Badge */}
-        <div className="hidden sm:block absolute top-4 right-4 z-[500] glass-panel rounded-2xl text-white p-3 shadow-xl text-xs space-y-1 max-w-[210px] border border-white/10">
+        <div className="hidden sm:block absolute top-4 right-4 z-[500] glass-panel rounded-2xl text-white p-3 shadow-xl text-xs space-y-1 max-w-[220px] border border-white/10">
           <div className="font-bold border-b border-white/5 pb-1 flex items-center justify-between text-amber-300">
-            <span>NASA SAR FEED</span>
+            <span>ROUTE STATUS</span>
             <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold">LIVE</span>
           </div>
-          <div className="text-slate-400 text-[11px] leading-relaxed">
-            Sentinel-1 synthetic aperture radar penetrates weather, fog, and night terrain across Kenya.
+          <div className="text-slate-300 text-[11px] leading-relaxed">
+            {routeSummary.distanceKm > 0 ? `${routeSummary.distanceKm.toFixed(1)} km • ${routeSummary.etaMinutes} min ETA` : 'Calculating live route…'}
           </div>
         </div>
       </div>

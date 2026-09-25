@@ -120,9 +120,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeIncident }) => {
             <Link to="/login">
               <Button
                 size="sm"
-                className="h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-white/5"
+                className="h-8 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-black border border-amber-300 shadow-sm"
               >
-                Driver Sign In
+                Log in
               </Button>
             </Link>
           )}

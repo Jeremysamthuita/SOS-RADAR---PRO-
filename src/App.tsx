@@ -6,6 +6,7 @@ import { LiveBiddingPage } from '@/pages/LiveBiddingPage';
 import { ActiveRescuePage } from '@/pages/ActiveRescuePage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { DataUsagePage } from '@/pages/DataUsagePage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { RouteGuard } from '@/components/common/RouteGuard';
 import { SosIncident } from '@/types/sos';
@@ -28,10 +29,10 @@ export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <div className="min-h-screen bg-[#070A10] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
+        <div className="min-h-screen bg-transparent text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
           <Navbar activeIncident={activeIncident} />
 
-          <main className="flex-1 w-full pb-16">
+          <main className="flex-1 w-full pb-16 bg-transparent">
             <Routes>
               {/* Screen 1: "One-Tap Dispatch" Home Screen (Dominant map + 4 Large Diagnostic Tiles) */}
               <Route
@@ -82,16 +83,17 @@ export function App() {
               />
 
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/privacy" element={<DataUsagePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
 
-          <footer className="w-full glass-panel border-t border-white/5 py-4 px-4 text-xs text-slate-400">
+          <footer className="w-full border-t border-slate-800 bg-slate-950/90 py-4 px-4 text-xs text-slate-400 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-center sm:text-left">
               <div>
                 <span className="font-extrabold text-white">ROADSIDE SOS</span> • High-Stress Highway Emergency Protocol
               </div>
-              <div className="flex items-center gap-4 text-[11px] text-slate-400">
+              <div className="flex items-center gap-4 text-[11px] text-slate-500">
                 <span>National Hotlines: 999 • 112 • 1199</span>
                 <span>AA Kenya +254 709 933 000</span>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LeafletRadarMap } from '@/components/map/LeafletRadarMap';
 import {
@@ -8,6 +8,12 @@ import {
   SosIncident,
 } from '@/types/sos';
 import { storageService } from '@/services/storage';
+import {
+  EMERGENCY_PRICE_OPTIONS,
+  REQUIRED_TriageChecks,
+  REQUIRED_TriageLabels,
+  calculateEmergencyEstimate,
+} from '@/lib/emergency-pricing';
 import {
   Truck,
   Disc,
@@ -23,6 +29,7 @@ import {
   Battery,
   AlertTriangle,
   Flame,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +53,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   // The 4 Large Diagnostic Categories
   const [selectedCategory, setSelectedCategory] = useState<EmergencyCategory>('towing');
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [customAdjustment, setCustomAdjustment] = useState<number>(0);
+  const [triageChecks, setTriageChecks] = useState<Record<string, boolean>>({
+    safe_location: false,
+    conscious_and_breathing: false,
+    hazards_visible: false,
+    vehicle_secure: false,
+  });
+
+  const pricingEstimate = useMemo(
+    () =>
+      calculateEmergencyEstimate(
+        selectedCategory,
+        selectedAddOns,
+        triageChecks as Record<'safe_location' | 'conscious_and_breathing' | 'hazards_visible' | 'vehicle_secure', boolean>,
+        customAdjustment
+      ),
+    [selectedCategory, selectedAddOns, triageChecks, customAdjustment]
+  );
 
   const diagnosticTiles = [
     {
@@ -95,13 +121,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     navigate(`/bidding?category=${selectedCategory}`);
   };
 
+  const toggleAddOn = (optionId: string) => {
+    setSelectedAddOns((current) =>
+      current.includes(optionId)
+        ? current.filter((id) => id !== optionId)
+        : [...current, optionId]
+    );
+  };
+
+  const toggleCheck = (checkId: string) => {
+    setTriageChecks((current) => ({
+      ...current,
+      [checkId]: !current[checkId],
+    }));
+  };
+
   const handleInstantOneTap = () => {
-    // 1-Tap Quick Dispatch: creates incident and jumps to tracking
+    if (!pricingEstimate.requiredChecksComplete) {
+      toast.error('Complete the pre-SOS safety evaluation before dispatching help.');
+      return;
+    }
+
     const newInc = storageService.createIncident(selectedCategory, {
       selectedVehicle,
+      notes: `Triage confirmed. Estimated cost: KES ${pricingEstimate.total.toLocaleString()}. Services: ${pricingEstimate.selectedLabels.join(', ') || 'base rescue'} .`,
     });
     onIncidentUpdated(newInc);
-    toast.success(`One-Tap Rescue Active: Dispatching nearest verified responder!`);
+    toast.success(`One-Tap Rescue Active: Dispatching nearest verified responder. Estimated total: KES ${pricingEstimate.total.toLocaleString()}`);
     navigate('/tracking');
   };
 
@@ -242,6 +288,85 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             })}
           </div>
 
+          {/* Emergency pricing & evaluation panel */}
+          <div className="rounded-2xl border border-amber-400/20 bg-slate-950/70 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
+                Pre-SOS assessment
+              </span>
+              <span className="text-[10px] text-emerald-300 font-bold">
+                {pricingEstimate.requiredChecksComplete ? 'Ready to dispatch' : 'Needs review'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {EMERGENCY_PRICE_OPTIONS[selectedCategory]?.map((option) => (
+                <label
+                  key={option.id}
+                  className="flex items-start gap-2 rounded-xl border border-white/10 bg-slate-900/70 p-2 text-left cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAddOns.includes(option.id)}
+                    onChange={() => toggleAddOn(option.id)}
+                    className="mt-1 h-4 w-4 accent-amber-400"
+                  />
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-[11px] font-bold text-white">{option.label}</span>
+                    <span className="block text-[10px] text-slate-400">{option.description}</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-amber-300">KES {option.price.toLocaleString()}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="space-y-2 border-t border-white/10 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-slate-300">Safety check</span>
+                <span className="text-[10px] text-slate-400">{Object.values(triageChecks).filter(Boolean).length}/4</span>
+              </div>
+
+              {REQUIRED_TriageChecks.map((check) => (
+                <label key={check} className="flex items-center justify-between gap-2 text-[11px] text-slate-200">
+                  <span className="flex-1">{REQUIRED_TriageLabels[check]}</span>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(triageChecks[check])}
+                    onChange={() => toggleCheck(check)}
+                    className="h-4 w-4 accent-emerald-500"
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 p-2.5 text-[11px] text-slate-200">
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <span className="font-bold uppercase tracking-wide text-amber-300">Estimated price</span>
+                <span className="font-black text-lg text-white">KES {pricingEstimate.total.toLocaleString()}</span>
+              </div>
+
+              <div className="space-y-1 text-slate-300">
+                <div className="flex items-center justify-between">
+                  <span>Base service</span>
+                  <span>KES {pricingEstimate.basePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Add-ons</span>
+                  <span>KES {pricingEstimate.modifierTotal.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Custom adjustment</span>
+                  <input
+                    type="number"
+                    value={customAdjustment}
+                    onChange={(event) => setCustomAdjustment(Number(event.target.value) || 0)}
+                    className="w-20 rounded-md border border-white/10 bg-slate-900 px-2 py-1 text-right text-white outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Action CTAs: High-Stress Single-Tap Call or View Live Bids */}
           <div className="space-y-2 pt-1">
             {/* Primary Action Button: View Live Bidding & Comparison Matrix */}
@@ -258,7 +383,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <Button
               type="button"
               onClick={handleInstantOneTap}
-              className="w-full h-11 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-white/10"
+              disabled={!pricingEstimate.requiredChecksComplete}
+              className="w-full h-11 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
               <span>Instant 1-Tap Auto-Dispatch Nearest Rig</span>

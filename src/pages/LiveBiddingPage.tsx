@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MOCK_PROVIDER_BIDS } from '@/services/mockData';
 import { ProviderBid, EmergencyCategory, SosIncident, RescueProvider } from '@/types/sos';
@@ -17,6 +17,8 @@ import {
   AlertCircle,
   MapPin,
   Sparkles,
+  SunMedium,
+  MoonStar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +38,35 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
 
   const [selectedBidId, setSelectedBidId] = useState<string>(bidsList[0]?.id || '');
   const [expandedBreakdownId, setExpandedBreakdownId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   const selectedBid = bidsList.find((b) => b.id === selectedBidId) || bidsList[0];
+
+  const themeClasses = useMemo(
+    () =>
+      theme === 'dark'
+        ? {
+            page: 'bg-[#070A10] text-slate-100',
+            panel: 'bg-slate-900 border-slate-800',
+            muted: 'text-slate-400',
+            card: 'bg-slate-900 border-slate-800 hover:border-amber-500/40',
+            selected: 'bg-slate-900 border-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.2)]',
+            accent: 'text-amber-400',
+            subtle: 'bg-slate-800 text-slate-200 border-slate-700',
+            section: 'bg-slate-950/70 border-slate-800',
+          }
+        : {
+            page: 'bg-[#f5f7fb] text-slate-900',
+            panel: 'bg-white border-slate-200',
+            muted: 'text-slate-500',
+            card: 'bg-white border-slate-200 hover:border-amber-300',
+            selected: 'bg-[#fffaf0] border-amber-400 shadow-[0_12px_30px_rgba(245,158,11,0.14)]',
+            accent: 'text-amber-600',
+            subtle: 'bg-amber-50 text-amber-800 border-amber-200',
+            section: 'bg-slate-50 border-slate-200',
+          },
+    [theme]
+  );
 
   const handleAcceptBid = (bid: ProviderBid) => {
     // Convert chosen bid into an active rescue provider and save incident
@@ -73,25 +102,34 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-2 space-y-4">
+    <div className={`w-full max-w-7xl mx-auto px-3 sm:px-4 py-2 space-y-4 transition-colors ${themeClasses.page}`}>
       {/* Top Header: High-Stress Clarity */}
-      <div className="safety-card rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border border-white/10">
+      <div className={`rounded-2xl border p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 ${themeClasses.panel}`}>
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
+          <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${themeClasses.accent}`}>
+            <ShieldCheck className={`w-4 h-4 ${themeClasses.accent}`} />
             <span>Guaranteed Fixed Pricing Matrix</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
+          <h1 className={`text-xl sm:text-2xl font-black tracking-tight mt-1 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
             {bidsList.length} Verified Local Rigs Ready to Dispatch
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className={`text-xs mt-0.5 ${themeClasses.muted}`}>
             Prices are final and locked. Zero hidden charges, mileage markups, or towing surcharges.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold bg-amber-400/10 text-amber-300 border border-amber-400/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-amber-400" />
+          <button
+            type="button"
+            aria-label="Toggle theme"
+            onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+            className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-bold transition-colors ${theme === 'dark' ? 'border-slate-700 bg-slate-800 text-slate-200' : 'border-slate-200 bg-slate-100 text-slate-700'}`}
+          >
+            {theme === 'dark' ? <SunMedium className="w-4 h-4" /> : <MoonStar className="w-4 h-4" />}
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+          <span className={`text-xs font-bold border px-3 py-1.5 rounded-xl flex items-center gap-1.5 ${themeClasses.subtle}`}>
+            <CheckCircle2 className={`w-4 h-4 ${themeClasses.accent}`} />
             Fixed Price Guarantee ($0 Hidden Fees)
           </span>
         </div>
@@ -107,15 +145,15 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
             <div
               key={bid.id}
               onClick={() => setSelectedBidId(bid.id)}
-              className={`rounded-3xl p-5 flex flex-col justify-between transition-all cursor-pointer relative ${
+              className={`rounded-3xl border p-5 flex flex-col justify-between transition-all cursor-pointer relative ${
                 isSelected
-                  ? 'safety-card-selected'
-                  : 'safety-card hover:border-amber-400/40 hover:bg-slate-900/60'
+                  ? themeClasses.selected
+                  : themeClasses.card
               }`}
             >
               {/* Badges: Fastest ETA / Best Value */}
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[10px] font-extrabold uppercase bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-white/5">
+                <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full border ${theme === 'dark' ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
                   Unit {bid.licensePlate}
                 </span>
 
@@ -140,33 +178,33 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
                 <h3 className="font-extrabold text-lg text-white leading-tight">
                   {bid.companyName}
                 </h3>
-                <div className="text-xs text-slate-400 flex items-center gap-2">
-                  <span>Driver: <strong className="text-white">{bid.driverName}</strong></span>
+                <div className={`text-xs flex items-center gap-2 ${themeClasses.muted}`}>
+                  <span>Driver: <strong className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>{bid.driverName}</strong></span>
                   <span>•</span>
-                  <span className="flex items-center gap-1 text-amber-400 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span className={`flex items-center gap-1 font-bold ${themeClasses.accent}`}>
+                    <Star className={`w-3.5 h-3.5 fill-current ${themeClasses.accent}`} />
                     {bid.rating.toFixed(2)} ({bid.reviewsCount})
                   </span>
                 </div>
               </div>
 
               {/* Key Metrics: Prominent Final Price & Verified ETA */}
-              <div className="my-4 p-3.5 rounded-2xl bg-slate-950/80 border border-white/10 space-y-2">
+              <div className={`my-4 p-3.5 rounded-2xl border space-y-2 ${theme === 'dark' ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-xs text-slate-400 font-medium">Final Fixed Price:</span>
+                  <span className={`text-xs font-medium ${themeClasses.muted}`}>Final Fixed Price:</span>
                   <div className="text-right">
-                    <span className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">
+                    <span className={`text-2xl sm:text-3xl font-black font-mono ${themeClasses.accent}`}>
                       KES {bid.finalFixedPriceKes.toLocaleString()}
                     </span>
-                    <span className="text-[10px] text-emerald-400 block font-bold">
+                    <span className="text-[10px] text-emerald-500 block font-bold">
                       Guaranteed Total
                     </span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Verified Arrival Time:</span>
-                  <span className="font-extrabold text-white text-sm flex items-center gap-1 text-emerald-400">
+                <div className={`pt-2 border-t flex items-center justify-between text-xs ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}`}>
+                  <span className={themeClasses.muted}>Verified Arrival Time:</span>
+                  <span className="font-extrabold text-sm flex items-center gap-1 text-emerald-500">
                     <Clock className="w-3.5 h-3.5" />
                     {bid.etaMinutes} Mins ({bid.distanceKm} km away)
                   </span>
@@ -174,12 +212,12 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
               </div>
 
               {/* Equipment Compatibility Verification */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-white/5 text-xs text-slate-300 space-y-1 mb-4">
-                <div className="font-bold text-white flex items-center gap-1.5 text-xs">
-                  <Truck className="w-3.5 h-3.5 text-amber-400" />
+              <div className={`p-3 rounded-xl border text-xs space-y-1 mb-4 ${theme === 'dark' ? 'bg-slate-900/60 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+                <div className={`font-bold flex items-center gap-1.5 text-xs ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                  <Truck className={`w-3.5 h-3.5 ${themeClasses.accent}`} />
                   <span>{bid.vehicleType}</span>
                 </div>
-                <div className="text-[11px] text-slate-400 leading-snug">
+                <div className={`text-[11px] leading-snug ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                   {bid.equipmentMatch}
                 </div>
               </div>
@@ -192,7 +230,7 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
                     e.stopPropagation();
                     toggleBreakdown(bid.id);
                   }}
-                  className="w-full text-[11px] font-semibold text-slate-400 hover:text-white flex items-center justify-between py-1 border-t border-white/5"
+                  className={`w-full text-[11px] font-semibold flex items-center justify-between py-1 border-t ${theme === 'dark' ? 'text-slate-400 hover:text-white border-slate-800' : 'text-slate-500 hover:text-slate-900 border-slate-200'}`}
                 >
                   <span>Itemized Price Breakdown</span>
                   {isBreakdownOpen ? (
@@ -203,26 +241,26 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
                 </button>
 
                 {isBreakdownOpen && (
-                  <div className="mt-2 p-2.5 rounded-xl bg-slate-900/90 border border-white/5 text-[11px] space-y-1 text-slate-300">
+                  <div className={`mt-2 p-2.5 rounded-xl border text-[11px] space-y-1 ${theme === 'dark' ? 'bg-slate-900/90 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Base Dispatch:</span>
+                      <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Base Dispatch:</span>
                       <span className="font-mono">KES {bid.priceBreakdown.baseFareKes}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Equipment Rig Fee:</span>
+                      <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Equipment Rig Fee:</span>
                       <span className="font-mono">KES {bid.priceBreakdown.equipmentKes}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Transit & Mileage:</span>
+                      <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Transit & Mileage:</span>
                       <span className="font-mono">KES {bid.priceBreakdown.mileageFeeKes}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Regulatory Taxes:</span>
+                      <span className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>Regulatory Taxes:</span>
                       <span className="font-mono">KES {bid.priceBreakdown.taxesKes}</span>
                     </div>
-                    <div className="flex justify-between pt-1 border-t border-white/10 font-bold text-white">
+                    <div className={`flex justify-between pt-1 border-t font-bold ${theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-900'}`}>
                       <span>Total Guaranteed:</span>
-                      <span className="font-mono text-amber-400">KES {bid.priceBreakdown.totalKes}</span>
+                      <span className="font-mono text-amber-500">KES {bid.priceBreakdown.totalKes}</span>
                     </div>
                   </div>
                 )}
@@ -238,7 +276,9 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
                 className={`w-full h-12 rounded-xl font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 shadow-lg transition-all ${
                   isSelected
                     ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/20'
-                    : 'bg-slate-800 hover:bg-slate-700 text-white'
+                    : theme === 'dark'
+                      ? 'bg-slate-800 hover:bg-slate-700 text-white'
+                      : 'bg-slate-900 hover:bg-slate-800 text-white'
                 }`}
               >
                 <span>Select & Lock In Rig</span>
@@ -250,16 +290,16 @@ export const LiveBiddingPage: React.FC<LiveBiddingPageProps> = ({ onIncidentUpda
       </div>
 
       {/* Safety Notice & Back Navigation */}
-      <div className="p-3.5 rounded-2xl safety-card flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+      <div className={`p-3.5 rounded-2xl border flex flex-wrap items-center justify-between gap-3 text-xs ${theme === 'dark' ? 'border-slate-800 bg-slate-900 text-slate-400' : 'border-slate-200 bg-white text-slate-500'}`}>
         <div className="flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-400" />
+          <AlertCircle className="w-4 h-4 text-amber-500" />
           <span>All providers are licensed, background-checked, and insured under Kenya transport laws.</span>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/')}
-          className="text-slate-300 hover:text-white text-xs"
+          className={theme === 'dark' ? 'text-slate-300 hover:text-white text-xs' : 'text-slate-600 hover:text-slate-900 text-xs'}
         >
           Back to Diagnostic Tiles
         </Button>

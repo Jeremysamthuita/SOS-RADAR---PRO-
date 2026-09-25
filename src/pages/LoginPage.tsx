@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import {
   ShieldAlert,
   Zap,
@@ -13,7 +12,7 @@ import {
   ArrowRight,
   Lock,
   Phone,
-  Sparkles,
+  Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -21,10 +20,10 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, signIn, quickSignIn, register } = useAuth();
 
-  const [mode, setMode] = useState<'quick' | 'credentials' | 'register'>('quick');
-  const [phoneOrEmail, setPhoneOrEmail] = useState('+254 722 849 102');
-  const [password, setPassword] = useState('sos123');
-  const [name, setName] = useState('');
+  const [mode, setMode] = useState<'quick' | 'credentials' | 'register'>('credentials');
+  const [phoneOrEmail, setPhoneOrEmail] = useState('+254 712 345 678');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('Kevin Otieno');
   const [selectedRole, setSelectedRole] = useState<'driver' | 'fleet_manager'>('driver');
 
   const handleCredentialsSubmit = (e: React.FormEvent) => {
@@ -60,108 +59,105 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-8 space-y-6">
-      {/* Brand Header */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 text-white shadow-xl shadow-red-500/20 mb-2">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 via-orange-500 to-rose-500 text-white shadow-lg shadow-amber-500/20 mb-2">
           <ShieldAlert className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           SOS RADAR KENYA
         </h1>
-        <p className="text-xs text-slate-400 font-medium">
-          Rapid Motorist Highway Relay • 24/7 Roadside Assistance
+        <p className="text-xs text-slate-500 font-medium">
+          Rapid roadside assistance • 24/7 emergency support
         </p>
       </div>
 
-      {/* 1-Tap Emergency Quick Access Card */}
-      <div className="glass-panel rounded-3xl p-6 shadow-2xl space-y-4 border border-white/10">
-        <div className="border-b border-white/5 pb-3 flex items-center justify-between">
-          <span className="font-bold text-xs uppercase text-white flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-            1-Tap Emergency Access
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <span className="font-bold text-xs uppercase tracking-[0.2em] text-slate-700 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-amber-600" />
+            Quick access
           </span>
-          <span className="text-[10px] font-semibold bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full">
-            Fast Bypass
+          <span className="text-[10px] font-semibold bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
+            Fast bypass
           </span>
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed">
-          In an urgent breakdown? Skip manual sign-in to immediately lock your vehicle coordinates and trigger emergency roadside dispatch:
+        <p className="text-xs text-slate-600 leading-relaxed">
+          Need help now? Skip sign-in and trigger emergency dispatch with your saved profile and vehicle data.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <button
             type="button"
             onClick={() => handleQuickLogin('driver')}
-            className="p-4 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800/80 hover:from-slate-800 hover:to-slate-700/80 border border-white/10 hover:border-white/20 text-left transition-all shadow-lg flex flex-col justify-between group"
+            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-amber-300 text-left transition-all shadow-sm flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs text-amber-300 flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-amber-700 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5" />
-                  Kenyan Driver
+                  Driver profile
                 </span>
-                <span className="text-[10px] bg-amber-400/20 text-amber-300 font-bold px-2 py-0.5 rounded-full">
-                  1-Tap
+                <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">
+                  1-tap
                 </span>
               </div>
-              <div className="font-bold text-sm text-white mt-2">Brian Mutua</div>
-              <div className="text-xs text-slate-400 font-mono mt-0.5">+254 722 849 102</div>
+              <div className="font-bold text-sm text-slate-900 mt-2">Brian Mutua</div>
+              <div className="text-xs text-slate-500 font-mono mt-0.5">+254 722 849 102</div>
             </div>
-            <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-slate-300 group-hover:text-white">
+            <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-600 group-hover:text-slate-900">
               <span>Prado KDA 849X</span>
-              <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+              <ArrowRight className="w-3.5 h-3.5 text-amber-600" />
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => handleQuickLogin('fleet_manager')}
-            className="p-4 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800/80 hover:from-slate-800 hover:to-slate-700/80 border border-white/10 hover:border-white/20 text-left transition-all shadow-lg flex flex-col justify-between group"
+            className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-rose-300 text-left transition-all shadow-sm flex flex-col justify-between group"
           >
             <div>
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-xs text-rose-300 flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-rose-700 flex items-center gap-1.5">
                   <Truck className="w-3.5 h-3.5" />
-                  Fleet Ops
+                  Fleet ops
                 </span>
-                <span className="text-[10px] bg-rose-400/20 text-rose-300 font-bold px-2 py-0.5 rounded-full">
-                  1-Tap
+                <span className="text-[10px] bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full">
+                  1-tap
                 </span>
               </div>
-              <div className="font-bold text-sm text-white mt-2">David Kiprono</div>
-              <div className="text-xs text-slate-400 font-mono mt-0.5">+254 711 554 990</div>
+              <div className="font-bold text-sm text-slate-900 mt-2">David Kiprono</div>
+              <div className="text-xs text-slate-500 font-mono mt-0.5">+254 711 554 990</div>
             </div>
-            <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-slate-300 group-hover:text-white">
-              <span>Multi-Rig Fleet</span>
-              <ArrowRight className="w-3.5 h-3.5 text-rose-400" />
+            <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-600 group-hover:text-slate-900">
+              <span>Fleet command</span>
+              <ArrowRight className="w-3.5 h-3.5 text-rose-600" />
             </div>
           </button>
         </div>
       </div>
 
-      {/* Standard Credential Form */}
-      <div className="glass-panel rounded-3xl p-6 shadow-2xl space-y-4 border border-white/10">
-        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-          <span className="font-semibold text-xs text-slate-200">
-            {mode === 'register' ? 'Register Kenyan Mobile' : 'Or Sign In with Mobile'}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+          <span className="font-semibold text-xs text-slate-700">
+            {mode === 'register' ? 'Create account' : 'Log in'}
           </span>
           <div className="text-xs">
             {mode === 'register' ? (
               <button
                 type="button"
                 onClick={() => setMode('credentials')}
-                className="underline text-slate-400 hover:text-white"
+                className="underline text-slate-500 hover:text-slate-900"
               >
-                Existing Account?
+                Existing account?
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => setMode('register')}
-                className="underline text-slate-400 hover:text-white"
+                className="underline text-slate-500 hover:text-slate-900"
               >
-                Create Account
+                Create account
               </button>
             )}
           </div>
@@ -170,50 +166,57 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleCredentialsSubmit} className="space-y-3.5">
           {mode === 'register' && (
             <div className="space-y-1">
-              <Label className="text-xs font-medium text-slate-300">Full Name</Label>
+              <Label className="text-xs font-medium text-slate-700">Full name</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Samuel Kariuki"
-                className="rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-10"
+                placeholder="e.g. Kevin Otieno"
+                className="rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs h-10"
               />
             </div>
           )}
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-slate-300">
-              Kenyan Mobile Number (+254)
-            </Label>
+            <Label className="text-xs font-medium text-slate-700">Mobile number</Label>
             <div className="relative">
               <Phone className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <Input
                 value={phoneOrEmail}
                 onChange={(e) => setPhoneOrEmail(e.target.value)}
-                placeholder="+254 7XX XXX XXX"
-                className="pl-9 rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-10"
+                placeholder="+254 712 345 678"
+                className="pl-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs h-10"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-slate-300">Password</Label>
+            <Label className="text-xs font-medium text-slate-700">Password</Label>
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="pl-9 rounded-xl border border-white/10 bg-slate-900/60 text-white text-xs h-10"
+                placeholder="Enter password"
+                className="pl-9 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-xs h-10"
               />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-600">
+            <div className="flex items-start gap-2">
+              <Check className="mt-0.5 h-4 w-4 text-emerald-600" />
+              <span>
+                I agree to the <Link to="/privacy" className="font-semibold text-slate-900 underline">data usage and privacy policy</Link> for SOS dispatch and emergency notifications.
+              </span>
             </div>
           </div>
 
           <Button
             type="submit"
-            className="w-full rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-xs h-10 mt-2 shadow-md shadow-red-500/20"
+            className="w-full rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-900 font-black text-xs h-10 mt-2 shadow-md shadow-amber-500/20"
           >
-            {mode === 'register' ? 'Register & Enter Command' : 'Sign In & Access SOS'}
+            {mode === 'register' ? 'Create account' : 'Log in'}
           </Button>
         </form>
       </div>

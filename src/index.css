@@ -4,25 +4,24 @@
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
+    --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 7%;
+    --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 7%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
-    /* Safety Amber / Safety Orange: #F59E0B */
     --primary: 38 92% 50%;
     --primary-foreground: 224 71% 4%;
-    --secondary: 217 33% 14%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 12%;
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
     --accent: 38 92% 50%;
     --accent-foreground: 224 71% 4%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 16%;
-    --input: 217 33% 16%;
+    --border: 215 27% 18%;
+    --input: 217 33% 17%;
     --ring: 38 92% 50%;
     --radius: 1rem;
   }
@@ -30,26 +29,38 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", Arial, sans-serif;
-  background-color: #070a10;
-  color: #f8fafc;
+  background: radial-gradient(circle at top, #111827 0%, #0b1020 35%, #050b16 100%);
+  color: #e2e8f0;
   -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
+#root {
+  min-height: 100vh;
+  background: transparent;
+}
+
 /* Safety Card & Surface Utilities */
 .safety-card {
-  background: #0e131f;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.38);
 }
 
 .safety-card-selected {
-  background: #181d2c;
-  border: 2px solid #f59e0b;
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(13, 18, 32, 0.96));
+  border: 2px solid rgba(245, 158, 11, 0.9);
+  box-shadow: 0 20px 45px rgba(245, 158, 11, 0.16);
 }
 
 .safety-amber-glow {
   box-shadow: 0 0 35px rgba(245, 158, 11, 0.35);
+}
+
+.glass-panel {
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(12px);
 }
 
 /* Strobe Animations */
